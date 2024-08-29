@@ -1,0 +1,27 @@
+{
+  "name": "youtube-songrequest",
+  "version": "1.0.0",
+  "description": "youtube song request, you can add play delete download and more with youtube content api",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node index.js",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "youtube-songrequest-api"
+  },
+  "keywords": [
+    "youtube",
+    "songrequest",
+    "api"
+  ],
+  "author": "melser",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "yt-stream": "^1.7.4",
+    "ytmusic-api": "^5.2.2"
+  }
+}

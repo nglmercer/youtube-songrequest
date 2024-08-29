@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador con Resultados</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="Buscar...">
+        <button id="search-button" class="search-button">Buscar</button>
+    </div>
+
+    <div id="results-container" class="results-container">
+    </div>
+    <div class="container">
+        <div class="video-player">
+            <div class="video-container">
+                <video id="videoPlayer" src="" controls></video>
+            </div>
+            <div class="controls">
+                <button id="playPauseBtn">Play</button>
+            </div>
+        </div>
+        <div class="playlist" id="playlist">
+            <!-- Playlist items will be dynamically added here -->
+        </div>
+        <script src="main.js" type="module"></script>
+</body>
+</html>
