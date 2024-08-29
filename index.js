@@ -62,7 +62,7 @@ app.get('/ytmusic', async (req, res) => {
     const action = req.query.action;
     const query = req.query.query;
     const url = req.query.url;
-    const outputPath = req.query.outputPath || 'output.mp3';
+    const outputPath = req.query.outputPath || 'output.mp3' || 'output.mp4';
 
     if (!action) {
         return res.status(400).send('Action not specified');
