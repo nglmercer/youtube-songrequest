@@ -3,25 +3,21 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const { YTMusicManager, YTStreamDownloader } = require('./youtubeDownloader');
-
 const app = express();
-const port = 3002;
+const port = parseInt(process.env.PORT) || process.argv[3] || 9002;
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(express.static('public'));
 const ytmusicmanager = new YTMusicManager();
 const ytDownloader = new YTStreamDownloader();
 
-
-// Ruta para servir media (video, imagen, audio)
+// Ruta para servir media (video, imagen, audio)we
 app.get('/media', (req, res) => {
     const mediaType = req.query.mediatype;
     const mediaPath = req.query.path ? req.query.path : getDefaultMediaPath(mediaType);
     if (!mediaType) {
         return res.status(400).send('Media type not specified');
-    } else if (!mediaPath) {
-        return res.status(400).send('Media path not specified');
     }
     if (!fs.existsSync(mediaPath)) {
         return res.status(404).send(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} not found`);
