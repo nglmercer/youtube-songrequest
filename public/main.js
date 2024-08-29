@@ -1,6 +1,7 @@
 import { ResultItem, getMediaServer } from './components/ResulItems.js';
+import { Queue, Controlmedia } from './components/Queueaudio.js';
+import AudioPlayer from './components/AudioPlayer.js';
 const videoPlayer = document.getElementById('videoPlayer');
-const audioPlayer = document.getElementById('audioPlayer')
 const playPauseBtn = document.getElementById('playPauseBtn');
 const playlist = document.getElementById('playlist');
 let videos = [];
@@ -12,6 +13,13 @@ console.log(currentUrl)
 const resultList = new ResultItem('results-container');
 const searchinput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
+const queue = new Queue();
+const audioPlayer = new AudioPlayer('audiotrack',
+  () => controlmedia.playPreviousAudio(),
+  () => controlmedia.nextaudio()
+);
+const controlmedia = new Controlmedia(audioPlayer);
+audioPlayer.setAudioInfo('Youtube Music');
 playPauseBtn.addEventListener('click', () => {
     if (isPlaying) {
         videoPlayer.pause();
@@ -85,8 +93,7 @@ const playVideoFromServer = (videoPath) => {
             videoPlayer.src = mediaUrl;
             await videoPlayer.play();
         } else if (mediaType === 'audio') {
-            audioPlayer.src = mediaUrl;
-            await audioPlayer.play();
+            await controlmedia.addSong(mediaUrl);
         } else {
             console.warn('Tipo de media no soportado:', mediaType);
         }
