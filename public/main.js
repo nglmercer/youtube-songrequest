@@ -19,6 +19,11 @@ const audioPlayer = new AudioPlayer('audiotrack',
   () => controlmedia.nextaudio()
 );
 const controlmedia = new Controlmedia(audioPlayer);
+
+const videoPlayer123 = document.getElementById('videoPlayer2');
+const audioPlayer123 = document.getElementById('audioPlayer');
+
+
 audioPlayer.setAudioInfo('Youtube Music');
 playPauseBtn.addEventListener('click', () => {
     if (isPlaying) {
@@ -35,27 +40,84 @@ searchButton.addEventListener('click', async () => {
     const query = searchinput.value;
     const searchData = await searchYTMusic(query);
     console.log(searchData);
-    searchData.forEach(data => {
-      resultList.addItem({
+    handleResults(searchData);
+});
+function handleResults(results) {
+  results.forEach(data => {
+    console.log("results data",data)
+    let resultsoptions = {}
+    let callback = null;
+    switch (data.type) {
+      case 'VIDEO':
+        resultsoptions = {
           imageUrl: data.thumbnails[0].url,
           title: data.name,
-          subtitles: ['Subtítulo del resultado 2', 'Información adicional'],
+          subtitles: [data.artist.name, 'Nombre del autor'],
           duration: data.duration,
           videoId: data.videoId
-      }, async (data) => {
-          console.log('Clicked on:', data);
-          try {
+        }
+        callback = () => getandplay(data);
+        break;
+      case 'ALBUM':
+        resultsoptions = {
+          imageUrl: data.thumbnails[0].url,
+          title: data.name,
+          subtitles: [data.artist.name, 'Nombre del autor'],
+          year: data.year,
+          playlistId: data.playlistId,
+          artist: data.artist.artistId,
+          artistName: data.artist.name,
+        }
+      break;
+      case 'PLAYLIST':
+        resultsoptions = {
+          imageUrl: data.thumbnails[0].url,
+          title: data.name,
+          subtitles: [data.artist.name, 'Nombre del autor'],
+          year: data.year,
+          playlistId: data.playlistId,
+          artist: data.artist.artistId,
+          artistName: data.artist.name,
+        }
+      break;
+      case 'ARTIST':
+        resultsoptions = {
+          imageUrl: data.thumbnails[0].url,
+          title: data.name,
+          subtitles: [data.artistId, 'Nombre del autor'],
+        }
+        break;
+      default:
+        console.error('Invalid result type:', data.type);
+        break;
+    }
+    if (resultsoptions && resultsoptions.videoId) {
+      AddItemstoPlaylist(resultsoptions, callback);
+    }
+  })
+}
+function AddItemstoPlaylist(options, onClickCallback = null) {
+  resultList.addItem(options, onClickCallback);
+}
+async function getandplay(data) {
+  // const videoUrl = `http://localhost:9002/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${data.videoId}&mediatype=video`;
+  const audioUrl = `http://localhost:9002/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${data.videoId}&mediatype=audio`;
+  // Stream Video
+  // streamMedia(videoUrl, videoPlayer123);
 
-            const result = await downloadByVideoId(data.data.videoId)
-            console.log(result.filePath)
-            playMediaFromServer(result.filePath, 'audio')
-          } catch(e) {
-            console.log(e)
-          }
-        });
-  });
-});
+  // Stream Audio
+  streamMedia(audioUrl, audioPlayer123);
 
+  // console.log('Clicked on:', data,"data.videoId",data.videoId);
+  // try {
+
+  //   const result = await downloadByVideoId(data.videoId)
+  //   console.log("result",result)
+
+  // } catch(e) {
+  //   console.log(e)
+  // }
+}
 async function searchYTMusic(query) {
     try {
         const response = await fetch(`/ytmusic?action=search&query=${encodeURIComponent(query)}`);
@@ -105,11 +167,11 @@ const playVideoFromServer = (videoPath) => {
 }
 
   // Example usage:
-  const videoPathOnServer = 'videoexample.mp4'; // Assuming the video is in the same directory as index.js
-  playVideoFromServer(videoPathOnServer);
+  // const videoPathOnServer = 'videoexample.mp4'; // Assuming the video is in the same directory as index.js
+  // playVideoFromServer(videoPathOnServer);
 // Añadir varios elementos
 //await resultList.addVideoByPath(null, 'Título del Resultado 1', ['Subtítulo del resultado 1', 'Otro subtítulo relevante'], '5:30');
-//resultList.addVideoBySrc('/videoexample.mp4', 'Título del Resultado 2', ['Subtítulo del resultado 2', 'Información adicional'], '3:45');
+//resultList.addVideoBySrc('/videoexample.mp4', 'Título del Resultado 2', ['Subtítulo del resultado 2', 'Nombre del autor'], '3:45');
 
 const downloadMusic = (url) => {
     fetch(`/ytmusic?action=download&url=${encodeURIComponent(url)}`)
@@ -122,7 +184,7 @@ const downloadMusic = (url) => {
       .then(data => {
         // Handle successful download, e.g., display a download link
         if (data.message === 'Download successful') {
-          console.log('Download successful:', data.filePath);
+          console.log('Download successful:', data);
           // You could create a download link here
           // const downloadLink = document.createElement('a');
           // downloadLink.href = data.filePath;
@@ -172,5 +234,40 @@ async function downloadByVideoId(videoId) {
   } catch (error) {
       console.error('Error during download:', error);
       return null;
+  }
+}
+async function streamMedia(url, mediaElement) {
+  const response = await fetch(url);
+  console.log("streamMedia",response)
+  if (!response.ok) {
+      throw new Error('Network response was not ok');
+  }
+  mediaElement.src = response.url;
+}
+
+async function fetchPlaylistInfo(playlistId) {
+  try {
+      // Define la URL con los parámetros necesarios
+      const url = new URL('http://localhost:9002/ytmusic');
+      url.searchParams.append('action', 'getplaylist');
+      url.searchParams.append('query', playlistId);
+
+      // Realiza la petición al servidor usando fetch
+      const response = await fetch(url);
+
+      // Verifica si la respuesta fue exitosa
+      if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
+
+      // Procesa la respuesta como JSON
+      const playlistInfo = await response.json();
+
+      // Maneja la información de la playlist obtenida
+      console.log('Playlist Info:', playlistInfo);
+
+      // Aquí puedes actualizar la interfaz de usuario con la información obtenida
+  } catch (error) {
+      console.error('Error fetching playlist info:', error);
   }
 }

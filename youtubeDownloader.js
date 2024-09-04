@@ -47,19 +47,31 @@ class YTStreamDownloader {
         return `${timestamp}_${baseName}`;
     }
     async download(url, outputname, options) {
-        const finalOutputPath = path.join(this.downloadPath, this.generateUniqueFileName(`${outputname}`));
-        const defaultOptions = options || this.defaultOptions;
-        try {
-            const stream = await ytstream.stream(url, defaultOptions);
-            stream.stream.pipe(fs.createWriteStream(finalOutputPath));
-            console.log(`Download complete: ${outputname}`, finalOutputPath);
-            // await this.cleanupOldFiles();
+      const finalOutputPath = path.join(this.downloadPath, this.generateUniqueFileName(outputname));
+      const defaultOptions = options || this.defaultOptions;
+      try {
+          const stream = await ytstream.stream(url, defaultOptions);
+          const fileStream = fs.createWriteStream(finalOutputPath);
+
+          stream.stream.pipe(fileStream);
+
             return { success: true, outputPath: finalOutputPath, videoUrl: stream.video_url };
           } catch (error) {
             console.error('Error downloading with YTStreamDownloader:', error);
             return { success: false, error };
         }
     }
+    async stream(url, options) {
+      const finalOptions = { ...this.defaultOptions, ...options };
+
+      try {
+          const stream = await ytstream.stream(url, finalOptions);
+          return stream.stream; // Retorna el stream directamente
+      } catch (error) {
+          console.error('Error streaming with YTStreamDownloader:', error);
+          throw error;
+      }
+  }
     async searchSong(query) {
         try {
             const results = await ytstream.search(query);
@@ -69,6 +81,15 @@ class YTStreamDownloader {
             return { success: false, error };
         }
     }
+    async getplaylisinfo(playlistId) {
+      try {
+          const results = await ytstream.getPlaylist('https://www.youtube.com/playlist?list='+playlistId);
+          return results;
+      } catch (error) {
+          console.error('Error searching with YTStreamDownloader:', error);
+          return { success: false, error };
+      }
+    }
     validateUrl(url) {
       const result = ytstream.validateURL(url);
       return result;
@@ -76,18 +97,7 @@ class YTStreamDownloader {
     listDownloadedFiles() {
       return fs.readdirSync(this.downloadPath);
     }
-    // async cleanupOldFiles() {
-    //     const files = fs.readdirSync(this.downloadPath).map(file => ({
-    //         name: file,
-    //         time: fs.statSync(path.join(this.downloadPath, file)).mtime.getTime()
-    //     })).sort((a, b) => a.time - b.time);
 
-    //     while (files.length > this.maxFiles) {
-    //         const oldestFile = files.shift();
-    //         fs.unlinkSync(path.join(this.downloadPath, oldestFile.name));
-    //         console.log(`Deleted old file: ${oldestFile.name}`);
-    //     }
-    // }
     deleteFile(fileName) {
         const filePath = path.join(this.downloadPath, fileName);
         if (fs.existsSync(filePath)) {
