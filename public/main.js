@@ -13,6 +13,13 @@ console.log(currentUrl)
 const resultList = new ResultItem('results-container');
 const searchinput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
+document.querySelector(".search-container").addEventListener("submit", async function(event) {
+  event.preventDefault();
+  const query = searchinput.value;
+  const searchData = await searchYTMusic(query);
+  console.log(searchData);
+  handleResults(searchData);
+})
 const queue = new Queue();
 const audioPlayer = new AudioPlayer('audiotrack',
   () => controlmedia.playPreviousAudio(),
@@ -263,10 +270,24 @@ async function fetchPlaylistInfo(playlistId) {
 
       // Procesa la respuesta como JSON
       const playlistInfo = await response.json();
-
+      let resultsoptions = {}
       // Maneja la información de la playlist obtenida
       console.log('Playlist Info:', playlistInfo);
-
+      playlistInfo.video.forEach(data => {
+        resultsoptions = {
+          imageUrl: data.thumbnails[0].url,
+          title: data.tittle,
+          subtitles: [data.channel.author, 'Nombre del autor'],
+          duration: data.length / 1000,
+          videoId: data.video_id,
+          artist: data.channel.id,
+          artistName: data.channel.author,
+        }
+        callback = () => getandplay(data);
+        if (data && data.videoId || data.video_id) {
+          AddItemstoPlaylist(resultsoptions, callback);
+        }
+      })
       // Aquí puedes actualizar la interfaz de usuario con la información obtenida
   } catch (error) {
       console.error('Error fetching playlist info:', error);

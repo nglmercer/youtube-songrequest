@@ -49,7 +49,7 @@ body {
     grid-template-columns: 1fr;
     grid-template-rows: 2fr;
     padding: 10px;
-    color: #f1f1f1; 
+    color: #f1f1f1;
 }
 .result-image {
     width: 100%;
@@ -101,7 +101,7 @@ body {
 }
 .playlist {
     flex: 1;
-    background-color: #fff;
+    /* background-color: #fff; */
     border-radius: 4px;
     padding: 10px;
     max-height: 600px;
