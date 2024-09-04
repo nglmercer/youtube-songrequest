@@ -81,7 +81,7 @@ class YTStreamDownloader {
             return { success: false, error };
         }
     }
-    async getplaylisinfo(playlistId) {
+    async getplaylistinfo(playlistId) {
       try {
           const results = await ytstream.getPlaylist('https://www.youtube.com/playlist?list='+playlistId);
           return results;

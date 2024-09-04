@@ -79,6 +79,7 @@ function handleResults(results) {
           artist: data.artist.artistId,
           artistName: data.artist.name,
         }
+        fetchPlaylistInfo(data.playlistId);
       break;
       case 'ARTIST':
         resultsoptions = {
@@ -100,10 +101,10 @@ function AddItemstoPlaylist(options, onClickCallback = null) {
   resultList.addItem(options, onClickCallback);
 }
 async function getandplay(data) {
-  // const videoUrl = `http://localhost:9002/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${data.videoId}&mediatype=video`;
+  const videoUrl = `http://localhost:9002/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${data.videoId}&mediatype=video`;
   const audioUrl = `http://localhost:9002/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${data.videoId}&mediatype=audio`;
   // Stream Video
-  // streamMedia(videoUrl, videoPlayer123);
+  streamMedia(videoUrl, videoPlayer123);
 
   // Stream Audio
   streamMedia(audioUrl, audioPlayer123);

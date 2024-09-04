@@ -76,7 +76,7 @@ app.get('/ytmusic', async (req, res) => {
         if (!query) {
           return res.status(400).send('PlaylistId not specified')
         }
-        const playlistInfo = await ytmusicmanager.getplaylisinfo(query)
+        const playlistInfo = await ytDownloader.getplaylistinfo(query)
         return res.json(playlistInfo)
         break
       case 'search':
