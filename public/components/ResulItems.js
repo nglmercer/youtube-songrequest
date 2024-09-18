@@ -48,7 +48,8 @@ class ResultItem {
       // Añadir la duración
       const durationElement = document.createElement('span');
       durationElement.classList.add('result-duration');
-      durationElement.textContent = `Duración: ${duration}`;
+      const durationText = duration / 60 > 1 ? `${Math.floor(duration / 60)} minutos` : `${duration} segundos`;
+      durationElement.textContent = `Duración: ${durationText}`;
       contentDiv.appendChild(durationElement);
 
       // Añadir el contenido al item
@@ -56,6 +57,7 @@ class ResultItem {
 
       // Añadir el item al contenedor principal
       this.container.appendChild(itemDiv);
+      return itemDiv;
   }
 
   async addVideoByPath(videoPath, title, subtitles = [], duration, onClickCallback = null) {
@@ -120,7 +122,44 @@ class ResultItem {
       this.container.appendChild(itemDiv);
   }
 }
+function getDivItem(data) {
+  const { imageUrl, title, subtitles = [], duration, videoId } = data;
+  const itemDiv = document.createElement('div');
+  itemDiv.classList.add('result-divitem');
+  const img = document.createElement('img');
+  img.src = imageUrl;
+  img.alt = `Imagen de resultado`;
+  img.classList.add('result-divimage');
+  itemDiv.appendChild(img);
 
+  // Crear el div result-content
+  const contentDiv = document.createElement('div');
+  contentDiv.classList.add('result-divcontent');
+
+  // Añadir el título
+  const titleElement = document.createElement('h2');
+  titleElement.classList.add('result-title');
+  titleElement.textContent = title;
+  contentDiv.appendChild(titleElement);
+
+  // Añadir los subtítulos
+  subtitles.forEach(subtitleText => {
+      const subtitleElement = document.createElement('p');
+      subtitleElement.classList.add('result-subtitle');
+      subtitleElement.textContent = subtitleText;
+      contentDiv.appendChild(subtitleElement);
+  });
+
+  // Añadir la duración
+  const durationElement = document.createElement('span');
+  durationElement.classList.add('result-duration');
+  durationElement.textContent = `Duración: ${duration}`;
+  contentDiv.appendChild(durationElement);
+
+  // Añadir el contenido al item
+  itemDiv.appendChild(contentDiv);
+  return itemDiv;
+}
 const currentUrl = window.location.href;
 
 async function getMediaServer(mediaType = 'video', mediaPath = '') {
@@ -140,4 +179,4 @@ async function getMediaServer(mediaType = 'video', mediaPath = '') {
   }
 }
 
-export { ResultItem, getMediaServer };
+export { ResultItem, getMediaServer,getDivItem };

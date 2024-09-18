@@ -1,11 +1,10 @@
 body {
     font-family: Roboto, Arial, sans-serif;
-    margin: 0 auto;
-    padding: 20px;
+    margin: 0;
+    padding: 0;
     width: 100%;
     height: 100%;
     background-color: #0f0f0f;
-
 }
 .search-container {
     display: flex;
@@ -76,6 +75,13 @@ body {
     font-size: 12px;
     color: #999;
 }
+.result-divitem {
+  display: grid !important;
+  grid-template-columns: calc(10% + 100px) auto;
+}
+.result-divcontent {
+  float: left;
+}
 .container {
     display: flex;
     max-width: 1200px;
@@ -83,21 +89,44 @@ body {
     padding: 20px;
 }
 .video-player {
-    flex: 2;
-    margin-right: 20px;
-}
-.video-container {
-    position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
-    overflow: hidden;
-}
-.video-container video {
-    position: absolute;
-    top: 0;
-    left: 0;
+  width: 100%;
+  border: 1px solid #ccc;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px 20px 0px 0px;
+  video {
     width: 100%;
     height: 100%;
+    object-fit: cover;
+  }
+}
+
+#videoPlayer {
+  width: 100%; /* Asegura que el video se ajuste al ancho del contenedor */
+  height: 100%; /* Asegura que el video se ajuste a la altura del contenedor */
+  object-fit: cover; /* Cubre todo el contenedor, podría cortar parte del video */
+}
+.player:not(.maximized) #videoPlayer2 {
+  pointer-events: none; /* Evita que los controles sean interactivos */
+}
+
+.player:not(.maximized) #videoPlayer2::-webkit-media-controls {
+  display: none; /* Oculta los controles en navegadores basados en Webkit (Chrome, Safari, etc.) */
+}
+
+.player:not(.maximized) #videoPlayer2::-webkit-media-controls-enclosure {
+  display: none; /* Oculta toda la barra de controles en navegadores Webkit */
+}
+
+.player:not(.maximized) #videoPlayer2::-moz-media-controls {
+  display: none; /* Oculta los controles en Firefox */
+}
+.player:not(.maximized) .video-container {
+  * {
+    border-radius: 20px 20px 0px 0px;
+  }
 }
 .playlist {
     flex: 1;
@@ -150,7 +179,344 @@ body {
 .controls button:hover {
     background-color: #0056b3;
 }
+.responsive-box {
+  width: 100%;
+  height: 100%;
+}
 video {
-    width: 100%;
+    width: 50%;
     max-width: 500px;
+}
+
+
+.containerbox {
+  box-sizing: content-box;
+  padding: 0.5rem;
+  position: relative;
+  border: 1px solid rgba(88, 88, 255, 0.123);
+  border-radius: 0.5rem;
+  background-color: #212121;
+  margin: 0.8rem;
+  min-width: 90%;
+  min-height: 50%;
+}
+.fixed-container {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-color: #212121;
+}
+.section {
+  background-color: #008000;
+  padding: 5px;
+  display: grid;
+  gap: 5px;
+}
+.grid {
+  display: grid !important;
+  padding: 5px;
+  gap: 5px;
+  background-color: #008000;
+}
+.flex {
+  display: flex !important;
+}
+.right-section {
+  flex-direction: column;
+}
+.horizontalflex {
+  flex-direction: row !important;
+  height: 100px;
+}
+.left-section {
+  display: flex;
+  flex-direction: column; /* Apilar los elementos uno encima del otro */
+  width: 100%;
+  height: 100%;
+}
+.flexitem1 {
+  flex: 1;
+  width: 100%;
+  background-color: #3F3F3F;
+}
+
+.hidden {
+  display: none !important;
+}
+.full-width {
+  grid-template-columns: 1fr;
+}
+
+.playlist{
+  border: 1px solid #3f3f3f;
+  border-radius: 20px;
+  padding: 0px;
+  color: #f1f1f1;
+  box-sizing: content-box;
+}
+.title-playlist{
+  position: relative;
+  height: 100px;
+  width: 100%;
+  background-color: #212121;
+  align-content: center;
+  border-bottom: 1px solid #3f3f3f;
+  border-radius: 20px 20px 0px 0px;
+}
+.title-playlist h2{
+  text-align: center;
+  margin: 0px;
+}
+.playlist-item{
+  width: 100%;
+  height: 20%;
+  margin-bottom: 4px;
+  background-color: #3f3f3f;
+  border-radius: 20px;
+  display: grid;
+  position: relative;
+  grid-template-areas:
+  "IMAGE TITLE"
+  "IMAGE ARTIST";
+}
+.playlist-item:hover{
+  background-color: #312b2a;
+}
+
+.image-item img{
+  border-radius: 20px;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 5px;
+  background-color: #0f0f0f;
+  grid-area: IMAGE;
+}
+.info-item{
+  padding: 0px;
+  position: relative;
+  left: 30px;
+}
+.info-item h3{
+  grid-area: TITLE;
+
+}
+.info-item p {
+
+  grid-area: ARTIST;
+}
+.player {
+  position: fixed;
+  right: 0;
+  width: auto;
+  height: auto;
+  background-color: #000;
+  transition: all 0.3s ease-in-out;
+  z-index: 1000;
+  position: fixed; /* El elemento se posiciona de manera absoluta dentro del contenedor */
+  bottom: 0%; /* Lo coloca en la parte inferior del contenedor */
+  right: 10px; /* Si quieres que se quede alineado a la izquierda */
+  transform: translateY(calc(0% - 10px)); /* No lo desplaza verticalmente */
+}
+.player.maximized {
+  transform: translateY(0);
+  width: 100%;
+  bottom: 0%;
+  height: calc(100% - 80px);
+  .video-container {
+    width: 100%;
+    height: calc(100% - 60px);
+  }
+}
+
+.video-container {
+  width: 100%;
+  height: auto; /* Full height minus controls */
+  background-color: #000;
+  display: flex;
+  /* align-items: center;
+  justify-content: center; */
+  color: #fff;
+  font-size: 24px;
+}
+.container-video {
+  width: 100%;
+  position: relative;
+  background-color: #212121;
+  padding: 5px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px,auto ));
+  gap: 5px;
+}
+.grid-1
+.player:not(.maximized) .video-container {
+  width: 100%;
+  float: left;
+  font-size: 12px;
+}
+.player:not(.maximized) .grid-2cols {
+  grid-template-columns: auto;
+  grid-template-rows: auto;
+  border: 1px solid #ccc;
+  video {
+    height: 90%;
+    width: auto;
+  }
+
+}
+.player-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px;
+  background-color: #282828;
+  color: #fff;
+}
+
+.player:not(.maximized) .player-controls {
+  width: auto;
+  float: right;
+  height: 80px;
+  padding: 0 20px;
+}
+
+.video-title {
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: auto;
+}
+
+.player:not(.maximized) .video-title {
+  font-size: 16px;
+}
+
+.minimize-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.player:not(.maximized) .minimize-btn {
+  font-size: 24px;
+}
+
+.grid-2cols {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 5px;
+  height: 100%;
+  width: 100%;
+}
+.child-grid2cols {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+}
+.audio-player {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #282828;
+  border-radius: 8px;
+  width: 400px;
+  margin: 20px auto;
+}
+
+.play-btn {
+  background-color: transparent;
+  border: none;
+  color: white;
+  font-size: 30px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.play-btn:hover {
+  color: #ff0000;
+}
+
+.progress-bar {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  background: #555;
+  border-radius: 5px;
+  margin: 0 10px;
+}
+
+.progress-bar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: #ff0000;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 70px;
+  height: 5px;
+  background: #555;
+  border-radius: 5px;
+}
+.justify-content-center {
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  text-align: center;
+}
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: #ff0000;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.scrollable-item {
+  border: 1px solid #ccc;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    max-width: 150px;
+  }
+}
+@media (max-height: 1600px) {
+  .player {
+    width: auto;
+    height: auto;
+    bottom: 0%;
+  }
+}
+
+@media (max-width: 800px) {
+  .player {
+    width: auto;
+    height: auto;
+    bottom: 0%;
+  }
+  .grid-2cols {
+    grid-template-columns: auto;
+    grid-template-rows: auto auto;
+  }
 }

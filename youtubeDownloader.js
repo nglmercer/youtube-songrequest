@@ -29,6 +29,15 @@ class YTMusicManager {
       throw err;
     }
   }
+  async getplaylistinfo(playlistId) {
+    try {
+      const playlist = await this.ytmusic.getPlaylist(playlistId);
+      return playlist;
+    } catch (err) {
+      console.error('Error:', err);
+      throw err;
+    }
+  }
 }
 
 class YTStreamDownloader {
@@ -36,7 +45,7 @@ class YTStreamDownloader {
       this.downloadPath = path.join(__dirname, 'downloads');
       this.maxFiles = 10;  // número máximo de archivos permitidos
       this.defaultOptions = {
-        quality: 'high',
+        quality: 'low',
         type: 'audio',
         highWaterMark: 1048576 * 32,
         download: true,
@@ -77,17 +86,27 @@ class YTStreamDownloader {
             const results = await ytstream.search(query);
             return results;
         } catch (error) {
-            console.error('Error searching with YTStreamDownloader:', error);
+            console.error('Error searching with YTStreamDownloader:', error, query);
             return { success: false, error };
         }
     }
     async getplaylistinfo(playlistId) {
+      const link = 'https://www.youtube.com/playlist?list='+playlistId;
       try {
-          const results = await ytstream.getPlaylist('https://www.youtube.com/playlist?list='+playlistId);
-          return results;
+          console.log("playlistId",playlistId)
+          const isValidUrl = ytstream.validatePlaylistURL(link);
+          if (!isValidUrl) {
+            console.log("isValidUrl",isValidUrl, link)
+            return { success: false, error: 'Invalid playlistId' };
+          } else{
+            console.log("isValidUrl",isValidUrl, link)
+            const results = await ytstream.getPlaylist(link);
+            return results;
+          }
+          // console.log("results",results)
       } catch (error) {
-          console.error('Error searching with YTStreamDownloader:', error);
-          return { success: false, error };
+          console.error('Error searching with YTStreamDownloader:', error, playlistId, link); //PLYpvI4FtuH4ehPZlSvxJopVsmKCxGJbRU PLYpvI4FtuH4ehPZlSvxJopVsmKCxGJbRU PLYpvI4FtuH4ehPZlSvxJopVsmKCxGJbRU
+          return { success: false, error: error };
       }
     }
     validateUrl(url) {

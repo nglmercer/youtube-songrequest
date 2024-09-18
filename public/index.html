@@ -14,31 +14,78 @@
                 <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
             </svg>
         </button>
-        <script>
-            document.querySelector(".search-container").addEventListener("submit", function(event) {
-                event.preventDefault();
-                console.log("Submitted");
-            });
-        </script>
+
     </form>
 
     <div id="results-container" class="results-container">
     </div>
     <div class="container">
-        <div class="video-player">
-            <div class="video-container">
-                <!-- <video id="videoPlayer" src="" controls></video> -->
-                <audio src="" controls="controls" id="audiotrack"></audio>
-            </div>
-            <div class="controls">
-                <button id="playPauseBtn">Play</button>
-            </div>
-        </div>
-        <video id="videoPlayer2" controls></video>
-        <audio id="audioPlayer" controls></audio>
-        <div class="playlist" id="playlist">
-            <!-- Playlist items will be dynamically added here -->
-        </div>
+        <div id="player" class="player">
+          <div class="video-container">
+            <div class="grid-2cols">
+              <div class="left-section">
+                  <div class="flexitem1">
+                    <div class="video-player">
+                        <video id="videoPlayer2" src="videoexample.mp4" controls></video>
+                          <!-- <video id="videoPlayer" src="" controls></video> -->
+                    </div>
+                    <div class="flexitem1">
+                      <audio id="audioPlayer"></audio>
+                      <input type="range" class="progress-bar" id="progressBar" value="0" max="100">
+                      <button class="play-btn" id="playBtn">▶</button>
+                      🔊<input type="range" class="volume-slider" id="volumeSlider" value="100" max="100">
+                    </div>
+                  </div>
+              </div>
+              <div class="right-section flex" id="playlist">
+                  <h2 class="justify-content-center">Playlist</h2>
+              </div>
+          </div>
+          </div>
+          <div class="player-controls" id="player-controls">
+              <button id="minimizeBtn" class="minimize-btn">▼</button>
+          </div>
+      </div>
+      <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+        const player = document.getElementById('player');
+        const minimizeBtn = document.getElementById('player-controls');
+        let isMaximized = false;
+
+        minimizeBtn.addEventListener('click', function(event) {
+            event.stopPropagation();
+            togglePlayerSize();
+        });
+
+        player.addEventListener('click', function(event) {
+            if (!isMaximized && event.target !== minimizeBtn) {
+                togglePlayerSize();
+            }
+        });
+        const leftSection = document.querySelector('.left-section');
+        const rightSection = document.querySelector('.right-section');
+        const containervideo = document.querySelector('.container-video');
+        rightSection.classList.toggle('hidden');
+        //leftSection.classList.toggle('horizontalflex');
+        function togglePlayerSize() {
+            isMaximized = !isMaximized;
+            player.classList.toggle('maximized', isMaximized);
+            minimizeBtn.textContent = isMaximized ? '▼' : '▲';
+            rightSection.classList.toggle('hidden');
+            if (isMaximized) {
+                player.style.zIndex = '1000';
+            } else {
+                setTimeout(() => {
+                    player.style.zIndex = '10';
+                }, 300); // Espera a que termine la transición antes de cambiar el z-index
+            }
+        }
+    });
+
+  </script>
+
         <script src="main.js" type="module"></script>
+        <script src="components/mediacontrols.js" type="module"></script>
 </body>
 </html>
