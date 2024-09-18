@@ -60,71 +60,115 @@ async function searchYTMusic(query) {
 }
 function handleResults(results) {
   results.forEach(data => {
-    console.log("results data",data)
-    let resultsoptions = {}
+    console.log("results data", data);
+    let resultsOptions = mapResultOptions(data);
     let callback = null;
+
     switch (data.type) {
       case 'SONG':
       case 'VIDEO':
-        resultsoptions = {
-          imageUrl: data.thumbnails[0].url,
-          title: data.name,
-          subtitles: [data.artist.name, data.name],
-          duration: data.duration,
-          videoId: data.videoId
-        }
-        callback = () =>  getandplay(data, resultsoptions);
+        callback = () => getandplay(data, resultsOptions);
         break;
       case 'ALBUM':
-        resultsoptions = {
-          imageUrl: data.thumbnails[0].url,
-          title: data.name,
-          subtitles: [data.artist.name, data.name],
-          year: data.year,
-          playlistId: data.playlistId,
-          artist: data.artist.artistId,
-          artistName: data.artist.name,
-        }
-        fetchPlaylistInfo(data.playlistId, data);
-      break;
       case 'PLAYLIST':
-        resultsoptions = {
-          imageUrl: data.thumbnails[0].url,
-          title: data.name,
-          subtitles: [data.artist.name, data.name],
-          year: data.year,
-          playlistId: data.playlistId,
-          artist: data.artist.artistId,
-          artistName: data.artist.name,
-        }
-        // console.log("playlistId fetchPlaylistInfo",data.playlistId, data)
         fetchPlaylistInfo(data.playlistId, data);
-      break;
+        break;
       case 'ARTIST':
-        resultsoptions = {
-          imageUrl: data.thumbnails[0].url,
-          title: data.name,
-          subtitles: [data.artistId, data.name],
-        }
         break;
       default:
         console.error('Invalid result type:', data.type);
-        break;
+        return;
     }
-    if (resultsoptions && resultsoptions.videoId) {
-      AddItemsResults(resultsoptions, callback);
+
+    if (resultsOptions?.videoId) {
+      AddItemsResults(resultsOptions, callback);
     }
-  })
+  });
+}
+
+function mapResultOptions(data) {
+  const commonOptions = {
+    imageUrl: data.thumbnails[0].url,
+    title: data.name,
+    subtitles: [data.artist?.name || data.artistId, data.name]
+  };
+
+  switch (data.type) {
+    case 'SONG':
+    case 'VIDEO':
+      return { ...commonOptions, duration: data.duration, videoId: data.videoId };
+    case 'ALBUM':
+    case 'PLAYLIST':
+      return {
+        ...commonOptions,
+        year: data.year,
+        playlistId: data.playlistId,
+        artist: data.artist.artistId,
+        artistName: data.artist.name
+      };
+    case 'ARTIST':
+      return commonOptions;
+    default:
+      return {};
+  }
+}
+
+async function fetchPlaylistInfo(playlistId, data) {
+  try {
+    const url = new URL('http://localhost:9002/ytmusic');
+    url.searchParams.append('action', 'getplaylist');
+    url.searchParams.append('query', playlistId);
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(`Network response was not ok: ${response.statusText}`);
+    }
+
+    const playlistInfo = await response.json();
+
+    if (!playlistInfo.videos) {
+      console.log("playlistInfo return", playlistInfo, playlistId, data);
+      return;
+    }
+
+    console.log('Playlist Info:', playlistInfo);
+
+    playlistInfo.videos.forEach(videoData => {
+      const videoOptions = {
+        imageUrl: videoData.thumbnails[0].url,
+        title: videoData.title,
+        subtitles: [videoData.channel.author, videoData.title],
+        duration: videoData.length / 1000,
+        videoId: videoData.video_id,
+        artist: videoData.channel.id,
+        artistName: videoData.channel.author,
+      };
+
+      const customCallback = () => getandplay(videoData, videoOptions);
+
+      if (videoData.video_id) {
+        AddItemsResults(videoOptions, customCallback);
+        console.log("AddItemsResults", videoOptions, customCallback);
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching playlist info:', error);
+  }
 }
 
 // Ejemplo de uso
 async function getandplay(data, resultsoptions) {
   console.log("getandplay",data)
   // playlistItems.addItem(data.name || data.title);
-  playlistItems.addDivItem(getDivItem(resultsoptions));
+  const customCallback = () => {
+    mediaQueue.addMediaItem(data);
+    mediaQueue.next(videoPlayer123, audioPlayer123);
+  }
+  playlistItems.addDivItem(getDivItem(resultsoptions,customCallback));
   console.log("playlistItems",playlistItems)
   mediaQueue.addMediaItem(data);
-  mediaQueue.playCurrentMedia(videoPlayer123, audioPlayer123);
+  mediaQueue.next(videoPlayer123, audioPlayer123);
   // const videoUrl = `http://localhost:9002/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${data.videoId}&mediatype=video`;
   // const audioUrl = `http://localhost:9002/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${data.videoId}&mediatype=audio`;
   // // Stream Video
@@ -143,55 +187,7 @@ async function streamMedia(url, mediaElement) {
   mediaElement.src = response.url;
 }
 
-async function fetchPlaylistInfo(playlistId, data) {
-  let customcallback = null;
-  try {
-    console.log("playlistId",playlistId)
-      // Define la URL con los parámetros necesarios
-      const url = new URL('http://localhost:9002/ytmusic');
-      url.searchParams.append('action', 'getplaylist');
-      url.searchParams.append('query', playlistId);
 
-      // Realiza la petición al servidor usando fetch
-      const response = await fetch(url);
-
-      // Verifica si la respuesta fue exitosa
-      if (!response.ok) {
-          throw new Error(`Network response was not ok: ${response.statusText}`);
-      }
-
-      // Procesa la respuesta como JSON
-      const playlistInfo = await response.json();
-      let resultsoptions = {}
-      // Maneja la información de la playlist obtenida
-      if (playlistInfo.video || playlistInfo.videos) {
-        console.log('Playlist Info:', playlistInfo);
-      } else {
-        console.log("playlistInfo return",playlistInfo, playlistId, data)
-        return;
-      }
-      playlistInfo.videos.forEach(data => {
-        resultsoptions = {
-          imageUrl: data.thumbnails[0].url,
-          title: data.title,
-          subtitles: [data.channel.author, data.title],
-          duration: data.length / 1000,
-          videoId: data.video_id,
-          artist: data.channel.id,
-          artistName: data.channel.author,
-        }
-        customcallback = () => getandplay(data, resultsoptions);
-        if (data && data.videoId || data.video_id) {
-          AddItemsResults(resultsoptions, customcallback);
-          console.log("AddItemsResults",resultsoptions, customcallback)
-
-        }
-      })
-      // Aquí puedes actualizar la interfaz de usuario con la información obtenida
-  } catch (error) {
-      console.error('Error fetching playlist info:', error);
-  }
-}
 
 // mediaQueue.addMediaItem({
 //   videoId: 'abc123',

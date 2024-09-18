@@ -122,7 +122,7 @@ class ResultItem {
       this.container.appendChild(itemDiv);
   }
 }
-function getDivItem(data) {
+function getDivItem(data, onClickCallback = null) {
   const { imageUrl, title, subtitles = [], duration, videoId } = data;
   const itemDiv = document.createElement('div');
   itemDiv.classList.add('result-divitem');
@@ -131,7 +131,9 @@ function getDivItem(data) {
   img.alt = `Imagen de resultado`;
   img.classList.add('result-divimage');
   itemDiv.appendChild(img);
-
+  if (onClickCallback) {
+    itemDiv.onclick = () => onClickCallback({ html: itemDiv, data: data });
+}
   // Crear el div result-content
   const contentDiv = document.createElement('div');
   contentDiv.classList.add('result-divcontent');

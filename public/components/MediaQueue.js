@@ -8,7 +8,7 @@ export default class MediaQueue {
   // Añadir elemento a la playlist
   addMediaItem(mediaItem) {
     this.playlist.push(mediaItem);
-    console.log("addMediaItem",mediaItem)
+    console.log("addMediaItem", mediaItem);
   }
 
   // Quitar elemento de la playlist por índice
@@ -35,15 +35,16 @@ export default class MediaQueue {
     } else {
       existvideoid = videoId;
     }
+
     // Chequear si ya está en el caché
-    let cachedMedia = this.cache.get(videoId);
+    let cachedMedia = this.cache.get(existvideoid); // Asegúrate de usar el id correcto
     if (!cachedMedia) {
       // Si no está en caché, obtener los enlaces de video y audio
       const videoUrl = `http://localhost:9002/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${existvideoid}&mediatype=video`;
       const audioUrl = `http://localhost:9002/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${existvideoid}&mediatype=audio`;
 
       cachedMedia = { videoUrl, audioUrl };
-      this.cache.set(videoId, cachedMedia);
+      this.cache.set(existvideoid, cachedMedia);
     }
 
     // Reproducir video y audio
@@ -53,7 +54,11 @@ export default class MediaQueue {
 
   // Método para retroceder en la playlist
   previous(videoPlayer, audioPlayer) {
-    if (this.currentIndex > 0) {
+    if (this.playlist.length === 1) {
+      // Caso especial: solo hay un elemento en la playlist
+      console.log('Solo hay un elemento en la playlist, reproduciendo el mismo.');
+      this.playCurrentMedia(videoPlayer, audioPlayer);
+    } else if (this.currentIndex > 0) {
       this.currentIndex--;
       this.playCurrentMedia(videoPlayer, audioPlayer);
     } else {
@@ -63,7 +68,11 @@ export default class MediaQueue {
 
   // Método para avanzar en la playlist
   next(videoPlayer, audioPlayer) {
-    if (this.currentIndex < this.playlist.length - 1) {
+    if (this.playlist.length === 1) {
+      // Caso especial: solo hay un elemento en la playlist
+      console.log('Solo hay un elemento en la playlist, reproduciendo el mismo.');
+      this.playCurrentMedia(videoPlayer, audioPlayer);
+    } else if (this.currentIndex < this.playlist.length - 1) {
       this.currentIndex++;
       this.playCurrentMedia(videoPlayer, audioPlayer);
     } else {
@@ -80,6 +89,7 @@ export default class MediaQueue {
     mediaElement.src = response.url;
   }
 }
+
 export class ScrollableContainer {
   constructor(containerId, config = {}) {
     this.container = document.getElementById(containerId);
