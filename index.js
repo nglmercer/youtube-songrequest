@@ -25,6 +25,7 @@ app.get('/ytmusic', async (req, res) => {
 
   handleYtmusicRequest(action, query, url, outputPath, req, res);
 });
+let lastStreamedUrl = null; // Guardar el último URL emitido
 
 // Función para manejar las solicitudes de YouTube
 async function handleYtmusicRequest(action, query, url, outputPath,req = null, res = null, socket = null) {
@@ -44,7 +45,7 @@ async function handleYtmusicRequest(action, query, url, outputPath,req = null, r
           if (socket) return socket.emit('error', 'PlaylistId not specified');
         }
         const playlistInfo = await ytDownloader.getplaylistinfo(query);
-
+        socketManager.emitEventToAll('getPlaylist', playlistInfo);
         if (res) return res.json(playlistInfo);
         if (socket) return socket.emit('getPlaylist', playlistInfo);
         break;
@@ -94,13 +95,22 @@ async function handleYtmusicRequest(action, query, url, outputPath,req = null, r
           res.setHeader('Content-Type', mediaType === 'video' ? 'video/mp4' : 'audio/mpeg');
           ytStream.pipe(res); // Transmitir vía HTTP
         }
-        socketManager.emitEventToAll('stream', { url, mediaType });
-        if (socket) {
-          // Si estás usando socket, podrías emitir información relevante
-          socket.emit('stream', { url, mediaType });
+        if (lastStreamedUrl !== url) {
+          lastStreamedUrl = url; // Actualizar la última URL emitida
 
-          // Nota: Aquí no estamos transmitiendo el archivo multimedia en sí, solo el metadata.
+          socketManager.emitEventToAll('streamMedia', {
+            url,
+            mediaType,
+            videoUrl: `http://localhost:9002/ytmusic?action=stream&url=${url}&mediatype=video`,
+            audioUrl: `http://localhost:9002/ytmusic?action=stream&url=${url}&mediatype=audio`
+          });
         }
+        // if (socket) {
+        //   // Si estás usando socket, podrías emitir información relevante
+        //   socket.emit('stream', { url, mediaType });
+
+        //   // Nota: Aquí no estamos transmitiendo el archivo multimedia en sí, solo el metadata.
+        // }
         break;
 
       default:

@@ -8,11 +8,23 @@ export default class UserData {
     };
   }
 
+  // Añadir elemento sin duplicarlo, solo moviéndolo al final si ya existe
   addItem(type, item) {
     if (!this.userData[type]) {
       throw new Error(`Tipo inválido: ${type}`);
     }
-    this.userData[type].unshift(item); // Añade el nuevo item al principio del array
+
+    // Buscar si el elemento ya existe
+    const index = this.userData[type].findIndex(existingItem => JSON.stringify(existingItem) === JSON.stringify(item));
+
+    if (index !== -1) {
+      // Si existe, eliminar el elemento actual
+      this.userData[type].splice(index, 1);
+    }
+
+    // Añadir el nuevo item al final del array
+    this.userData[type].push(item);
+
     this.saveUserData();
   }
 
@@ -20,7 +32,7 @@ export default class UserData {
     if (!this.userData[type]) {
       throw new Error(`Tipo inválido: ${type}`);
     }
-    return this.userData[type].slice(0, count);
+    return this.userData[type].slice(-count); // Obtener los últimos `count` elementos
   }
 
   getAllItems(type) {
@@ -42,6 +54,7 @@ export default class UserData {
     localStorage.setItem(this.storageName, JSON.stringify(this.userData));
   }
 }
+
 export class DivManager {
   constructor(containerId, divClass, initialData = []) {
     this.container = document.getElementById(containerId);

@@ -87,6 +87,7 @@ export default class MediaQueue {
       throw new Error('Network response was not ok');
     }
     mediaElement.src = response.url;
+    mediaElement.play();
   }
 }
 

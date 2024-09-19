@@ -49,7 +49,6 @@ function AddItemsResults(options, onClickCallback = null) {
 }
 console.log("userData",userData.getLastItems('text', 5))
 async function searchYTMusic(query) {
-  console.log("query",query)
   userData.addItem('text', query);
   manager.addDiv(query);
   try {
@@ -120,7 +119,7 @@ function mapResultOptions(data) {
       return {};
   }
 }
-
+socketManager.on('getPlaylist', (data) => handlePlaylistInfo(data));
 async function fetchPlaylistInfo(playlistId, data) {
   try {
     const url = new URL('http://localhost:9002/ytmusic');
@@ -134,37 +133,38 @@ async function fetchPlaylistInfo(playlistId, data) {
     }
 
     const playlistInfo = await response.json();
-
-    if (!playlistInfo.videos) {
-      console.log("playlistInfo return", playlistInfo, playlistId, data);
-      return;
-    }
-
-    console.log('Playlist Info:', playlistInfo);
-
-    playlistInfo.videos.forEach(videoData => {
-      const videoOptions = {
-        imageUrl: videoData.thumbnails[0].url,
-        title: videoData.title,
-        subtitles: [videoData.channel.author, videoData.title],
-        duration: videoData.length / 1000,
-        videoId: videoData.video_id,
-        artist: videoData.channel.id,
-        artistName: videoData.channel.author,
-      };
-
-      const customCallback = () => getandplay(videoData, videoOptions);
-
-      if (videoData.video_id) {
-        AddItemsResults(videoOptions, customCallback);
-        console.log("AddItemsResults", videoOptions, customCallback);
-      }
-    });
+    // handlePlaylistInfo(playlistInfo);
   } catch (error) {
     console.error('Error fetching playlist info:', error);
   }
 }
+function handlePlaylistInfo(playlistInfo) {
+  if (!playlistInfo.videos) {
+    console.log("playlistInfo return", playlistInfo);
+    return;
+  }
 
+  console.log('Playlist Info:', playlistInfo);
+
+  playlistInfo.videos.forEach(videoData => {
+    const videoOptions = {
+      imageUrl: videoData.thumbnails[0].url,
+      title: videoData.title,
+      subtitles: [videoData.channel.author, videoData.title],
+      duration: videoData.length / 1000,
+      videoId: videoData.video_id,
+      artist: videoData.channel.id,
+      artistName: videoData.channel.author,
+    };
+
+    const customCallback = () => getandplay(videoData, videoOptions);
+
+    if (videoData.video_id) {
+      AddItemsResults(videoOptions, customCallback);
+      console.log("AddItemsResults", videoOptions, customCallback);
+    }
+  });
+}
 // Ejemplo de uso
 async function getandplay(data, resultsoptions) {
   console.log("getandplay",data)
@@ -185,6 +185,18 @@ async function getandplay(data, resultsoptions) {
   // // Stream Audio
   // streamMedia(audioUrl, audioPlayer123);
 }
+socketManager.on('streamMedia', ({ videoUrl, audioUrl, mediaType }) => {
+  console.log("streamMedia", videoUrl, audioUrl, mediaType);
+
+  setTimeout(() => {
+    if (mediaType === 'video') {
+      videoPlayer123.src = videoUrl;
+    }
+    if (mediaType === 'audio') {
+      audioPlayer123.src = audioUrl;
+    }
+  }, 1000);
+});
 
 async function streamMedia(url, mediaElement) {
   const response = await fetch(url);

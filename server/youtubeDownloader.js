@@ -45,7 +45,7 @@ class YTStreamDownloader {
       this.downloadPath = path.join(__dirname, 'downloads');
       this.maxFiles = 10;  // número máximo de archivos permitidos
       this.defaultOptions = {
-        quality: 'low',
+        quality: 'high',//low ? high
         type: 'audio',
         highWaterMark: 1048576 * 32,
         download: true,
