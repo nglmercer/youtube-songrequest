@@ -122,7 +122,7 @@ function mapResultOptions(data) {
 socketManager.on('getPlaylist', (data) => handlePlaylistInfo(data));
 async function fetchPlaylistInfo(playlistId, data) {
   try {
-    const url = new URL('http://localhost:9002/ytmusic');
+    const url = new URL(window.location + '/ytmusic');
     url.searchParams.append('action', 'getplaylist');
     url.searchParams.append('query', playlistId);
 

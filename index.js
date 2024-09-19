@@ -95,14 +95,15 @@ async function handleYtmusicRequest(action, query, url, outputPath,req = null, r
           res.setHeader('Content-Type', mediaType === 'video' ? 'video/mp4' : 'audio/mpeg');
           ytStream.pipe(res); // Transmitir vía HTTP
         }
+        console.log("streamMedia.....");
         if (lastStreamedUrl !== url) {
           lastStreamedUrl = url; // Actualizar la última URL emitida
 
           socketManager.emitEventToAll('streamMedia', {
             url,
             mediaType,
-            videoUrl: `http://localhost:9002/ytmusic?action=stream&url=${url}&mediatype=video`,
-            audioUrl: `http://localhost:9002/ytmusic?action=stream&url=${url}&mediatype=audio`
+            videoUrl: `/ytmusic?action=stream&url=${url}&mediatype=video`,
+            audioUrl: `/ytmusic?action=stream&url=${url}&mediatype=audio`
           });
         }
         // if (socket) {

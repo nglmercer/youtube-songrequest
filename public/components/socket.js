@@ -48,10 +48,10 @@ export const socketurl = {
       console.log("protocol", protocol);
       return `http://localhost:${port}`;
     } else if (protocol === "https:") {
-      console.log(`${protocol}//${hostname}:${port}`);
-      return `${protocol}//${hostname}:${port}`;
+      console.log(`${window.location}`);
+      return `${window.location}:${port}`;
     } else if (protocol === "http:") {
-      return `http://${hostname}:${port}`;
+      return `${window.location}`;
     }
   }
 };
