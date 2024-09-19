@@ -2,17 +2,121 @@ const express = require('express')
 const fs = require('fs')
 const path = require('path')
 const cors = require('cors')
-const { YTMusicManager, YTStreamDownloader } = require('./youtubeDownloader')
+const http = require('http');
+const { YTMusicManager, YTStreamDownloader } = require('./server/youtubeDownloader')
+const SocketManager = require('./server/socketmanager');
+const { getPlaylist } = require('yt-stream');
 const app = express()
 const port = parseInt(process.env.PORT) || process.argv[3] || 9002
 // Middleware
-app.use(express.json())
-app.use(cors({ origin: '*' }))
-app.use(express.static('public'))
+app.use(express.json());
+app.use(cors({ origin: '*' }));
+app.use(express.static('public'));
+const server = http.createServer(app);
+const socketManager = new SocketManager(server); // Crear instancia de SocketManager
 const ytmusicmanager = new YTMusicManager()
 const ytDownloader = new YTStreamDownloader()
 
-// Ruta para servir media (video, imagen, audio)we
+server.listen(port, () => {
+  console.log(`Server running on port ${port}!`);
+});
+app.get('/ytmusic', async (req, res) => {
+  const { action, query, url, outputPath = 'output.mp3' || 'output.mp4' } = req.query;
+
+  handleYtmusicRequest(action, query, url, outputPath, req, res);
+});
+
+// Función para manejar las solicitudes de YouTube
+async function handleYtmusicRequest(action, query, url, outputPath,req = null, res = null, socket = null) {
+  if (!action) {
+    if (res) {
+      return res.status(400).send('Action not specified');
+    } else if (socket) {
+      return socket.emit('error', 'Action not specified');
+    }
+  }
+
+  try {
+    switch (action) {
+      case 'getplaylist':
+        if (!query) {
+          if (res) return res.status(400).send('PlaylistId not specified');
+          if (socket) return socket.emit('error', 'PlaylistId not specified');
+        }
+        const playlistInfo = await ytDownloader.getplaylistinfo(query);
+
+        if (res) return res.json(playlistInfo);
+        if (socket) return socket.emit('getPlaylist', playlistInfo);
+        break;
+
+      case 'search':
+        if (!query) {
+          if (res) return res.status(400).send('Query not specified');
+          if (socket) return socket.emit('error', 'Query not specified');
+        }
+        const searchResults = await ytmusicmanager.searchSong(query);
+        socketManager.emitEventToAll('search', searchResults);
+        if (res) return res.json(searchResults);
+        if (socket) return socket.emit('search', searchResults);
+        break;
+
+      case 'download':
+        if (!url) {
+          if (res) return res.status(400).send('URL not specified');
+          if (socket) return socket.emit('error', 'URL not specified');
+        }
+        const downloadResult = await ytDownloader.download(url, outputPath);
+        if (downloadResult.success) {
+          const response = {
+            message: 'Download successful',
+            filePath: downloadResult.outputPath,
+            stream: downloadResult,
+          };
+
+          if (res) return res.json(response);
+          if (socket) return socket.emit('download', response);
+        } else {
+          if (res) return res.status(500).send('Download failed');
+          if (socket) return socket.emit('error', 'Download failed');
+        }
+        break;
+
+      case 'stream':
+        if (!url) {
+          if (res) return res.status(400).send('URL not specified');
+          if (socket) return socket.emit('error', 'URL not specified');
+        }
+
+        const mediaType = res ? req.query.mediatype : socket.query.mediatype || 'audio';
+        const ytStream = await ytDownloader.stream(url, { type: mediaType });
+
+        if (res) {
+          res.setHeader('Content-Type', mediaType === 'video' ? 'video/mp4' : 'audio/mpeg');
+          ytStream.pipe(res); // Transmitir vía HTTP
+        }
+        socketManager.emitEventToAll('stream', { url, mediaType });
+        if (socket) {
+          // Si estás usando socket, podrías emitir información relevante
+          socket.emit('stream', { url, mediaType });
+
+          // Nota: Aquí no estamos transmitiendo el archivo multimedia en sí, solo el metadata.
+        }
+        break;
+
+      default:
+        if (res) return res.status(400).send('Invalid action');
+        if (socket) return socket.emit('error', 'Invalid action');
+    }
+  } catch (error) {
+    console.error('Error handling YTMusic request:', error);
+
+    if (res) {
+      res.status(500).send('Internal server error');
+    } else if (socket) {
+      socket.emit('error', 'Internal server error');
+    }
+  }
+}
 app.get('/media', (req, res) => {
   const mediaType = req.query.mediatype
   const mediaPath = req.query.path ? req.query.path : getDefaultMediaPath(mediaType)
@@ -60,69 +164,6 @@ app.get('/media', (req, res) => {
     fs.createReadStream(mediaPath).pipe(res)
   }
 })
-app.get('/ytmusic', async (req, res) => {
-  const action = req.query.action
-  const query = req.query.query
-  const url = req.query.url
-  const outputPath = req.query.outputPath || 'output.mp3' || 'output.mp4'
-
-  if (!action) {
-    return res.status(400).send('Action not specified')
-  }
-
-  try {
-    switch (action) {
-      case 'getplaylist':
-        if (!query) {
-          return res.status(400).send('PlaylistId not specified')
-        }
-        const playlistInfo = await ytDownloader.getplaylistinfo(query)
-        return res.json(playlistInfo)
-        break
-      case 'search':
-        if (!query) {
-          return res.status(400).send('Query not specified')
-        }
-        const searchResults = await ytmusicmanager.searchSong(query)
-        return res.json(searchResults)
-        break
-      case 'download':
-        if (!url) {
-          return res.status(400).send('URL not specified')
-        }
-        const downloadResult = await ytDownloader.download(url, outputPath)
-        if (downloadResult.success) {
-          return res.json({
-            message: 'Download successful',
-            filePath: downloadResult.outputPath,
-            stream: downloadResult
-          })
-        } else {
-          return res.status(500).send('Download failed')
-        }
-        break
-        case 'stream':
-          if (!url) {
-              return res.status(400).send('URL not specified');
-          }
-
-          const mediaType = req.query.mediatype || 'audio';
-          const ytStream = await ytDownloader.stream(url, { type: mediaType });
-
-          res.setHeader('Content-Type', mediaType === 'video' ? 'video/mp4' : 'audio/mpeg');
-
-          // Transmitir el stream directamente
-          ytStream.pipe(res);
-          break;
-      default:
-        res.status(400).send('Invalid action')
-    }
-  } catch (error) {
-    console.error('Error handling YTMusic request:', error)
-    res.status(500).send('Internal server error')
-  }
-})
-
 function getContentType(mediaType) {
   switch (mediaType) {
     case 'video':
@@ -150,4 +191,3 @@ function getDefaultMediaPath(mediaType) {
   }
 }
 
-app.listen(port, () => console.log(`Server running on port ${port}!`))

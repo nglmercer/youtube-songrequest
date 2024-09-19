@@ -2,6 +2,8 @@ import { ResultItem, getMediaServer,getDivItem } from './components/ResulItems.j
 import { Queue, Controlmedia } from './components/Queueaudio.js';
 import AudioPlayer from './components/AudioPlayer.js';
 import MediaQueue, {ScrollableContainer} from './components/MediaQueue.js';
+import UserData, {DivManager} from './components/Userdata.js';
+import socketManager from './components/socket.js';
 const videoPlayer = document.getElementById('videoPlayer');
 const playlist = document.getElementById('playlist');
 let videos = [];
@@ -13,7 +15,8 @@ console.log(currentUrl)
 const resultList = new ResultItem('results-container');
 const searchinput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
-const queue = new Queue();
+const userData = new UserData("userData");
+const manager = new DivManager('Sugerencias', 'Sugerencias-div', userData.getLastItems('text', 5));
 const mediaQueue = new MediaQueue();
 let playlistconfig = {
   visibleRange: 10,
@@ -27,10 +30,12 @@ document.querySelector(".search-container").addEventListener("submit", async fun
   const query = searchinput.value;
   const searchData = await searchYTMusic(query);
   console.log(searchData);
-  handleResults(searchData);
+  // handleResults(searchData);
 })
-
-
+socketManager.on('search', (data) => handleResults(data));
+function handlesocketsearch(data) {
+  console.log("handlesocketsearch",data)
+}
 
 // const audioPlayer = new AudioPlayer('audiotrack',
 //   () => controlmedia.playPreviousAudio(),
@@ -42,8 +47,11 @@ document.querySelector(".search-container").addEventListener("submit", async fun
 function AddItemsResults(options, onClickCallback = null) {
   return resultList.addItem(options, onClickCallback);
 }
+console.log("userData",userData.getLastItems('text', 5))
 async function searchYTMusic(query) {
   console.log("query",query)
+  userData.addItem('text', query);
+  manager.addDiv(query);
   try {
       const response = await fetch(`/ytmusic?action=search&query=${encodeURIComponent(query)}`);
 
