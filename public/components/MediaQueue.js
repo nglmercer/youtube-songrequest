@@ -95,11 +95,11 @@ export default class MediaQueue {
   constructor() {
     this.playlist = [];
     this.currentIndex = 0;
-    this.cache = new Map(); // Caché para almacenar los videos y audios
   }
 
   // Añadir elemento a la playlist si no existe o actualizar si el src es diferente
   addMediaItem(mediaItem) {
+    console.log("addMediaItem", mediaItem);
     const existingItem = this.playlist.find(item => item.url === mediaItem.url);
     if (!existingItem) {
       this.playlist.push(mediaItem);
@@ -123,7 +123,6 @@ export default class MediaQueue {
     this.addMediaItem({ url: videoUrl, type: 'video', src: videoSrc });
   }
 
-  // Quitar elemento de la playlist por índice
   removeMediaItem(index) {
     if (index >= 0 && index < this.playlist.length) {
       this.playlist.splice(index, 1);
@@ -131,55 +130,29 @@ export default class MediaQueue {
       console.error('Índice fuera de rango');
     }
   }
-
-  // Reproducir el elemento actual
   async playCurrentMedia(videoPlayer, audioPlayer) {
     const currentItem = this.playlist[this.currentIndex];
     if (!currentItem) {
-      console.error('No hay más elementos en la playlist.');
+      console.error('No hay más elementos en la playlist.', console.log(this.playlist), this.currentIndex);
       return;
     }
 
     if (currentItem.url) {
-      // Verificar si el src actual es el mismo
-      if (currentItem.type === 'video' && videoPlayer.src === currentItem.src) {
-        console.log('El video ya tiene el src correcto');
-        return;
-      } else if (currentItem.type === 'audio' && audioPlayer.src === currentItem.src) {
-        console.log('El audio ya tiene el src correcto');
-        return;
+      if (currentItem.type === 'video') {
+        videoPlayer.src = currentItem.url;
+        videoPlayer.play();
+      } else if (currentItem.type === 'audio') {
+        audioPlayer.src = currentItem.url;
+        audioPlayer.play();
       }
-
-      // Si el src es diferente, actualizarlo y reproducir
-      await this.streamMedia(currentItem.src, currentItem.type === 'video' ? videoPlayer : audioPlayer);
     } else {
-      const videoId = currentItem.videoId || currentItem.video_id;
-
-      // Chequear si ya está en el caché
-      let cachedMedia = this.cache.get(videoId);
-      if (!cachedMedia) {
-        // Obtener los enlaces de video y audio si no están en caché
-        const videoUrl = `${window.location}ytmusic?action=stream&url=https://www.youtube.com/watch?v=${videoId}&mediatype=video`;
-        const audioUrl = `${window.location}ytmusic?action=stream&url=https://www.youtube.com/watch?v=${videoId}&mediatype=audio`;
-        cachedMedia = { videoUrl, audioUrl };
-        this.cache.set(videoId, cachedMedia);
-      }
-
-      // Verificar y actualizar src si es necesario
-      if (videoPlayer.src !== cachedMedia.videoUrl) {
-        await this.streamMedia(cachedMedia.videoUrl, videoPlayer);
-      }
-      if (audioPlayer.src !== cachedMedia.audioUrl) {
-        await this.streamMedia(cachedMedia.audioUrl, audioPlayer);
-      }
+      console.error('URL no definida para el elemento actual');
     }
 
     // Escuchar el evento 'ended' para avanzar al siguiente elemento
     videoPlayer.onended = () => this.handleMediaEnd(videoPlayer, audioPlayer);
     audioPlayer.onended = () => this.handleMediaEnd(videoPlayer, audioPlayer);
   }
-
-  // Método para manejar el final del contenido
   handleMediaEnd(videoPlayer, audioPlayer) {
     if (this.currentIndex < this.playlist.length - 1) {
       this.next(videoPlayer, audioPlayer);
@@ -191,17 +164,14 @@ export default class MediaQueue {
     }
   }
 
-  // Método para avanzar en la playlist
   next(videoPlayer, audioPlayer) {
     if (this.currentIndex < this.playlist.length - 1) {
       this.currentIndex++;
       this.playCurrentMedia(videoPlayer, audioPlayer);
     } else {
-      console.log('Ya estás en el último elemento de la playlist.');
+      this.playCurrentMedia(videoPlayer, audioPlayer);
     }
   }
-
-  // Método para hacer streaming de video/audio
   streamMedia(url, mediaElement) {
     mediaElement.src = url;
     mediaElement.play();

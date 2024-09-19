@@ -168,36 +168,32 @@ if (localStorage.getItem('lastPlaylistInfo')) {
 // Ejemplo de uso
 async function getAndPlay(data, resultsoptions) {
   console.log("getAndPlay", data);
-  // playlistItems.addItem(data.name || data.title);
+
+  const videoId = data.videoId || data.video_id;
+  if (!videoId) {
+    console.error('Video ID is undefined');
+    return;
+  }
+
+  const videoUrl = `${window.location}ytmusic?action=stream&url=https://www.youtube.com/watch?v=${videoId}&mediatype=video`;
+  const audioUrl = `${window.location}ytmusic?action=stream&url=https://www.youtube.com/watch?v=${videoId}&mediatype=audio`;
+
   const customCallback = () => {
-    mediaQueue.addMediaItem(data);
-    mediaQueue.playCurrentMedia(videoPlayer123, audioPlayer123);
+    // mediaQueue.addMediaItem({ url: videoUrl, type: 'video' });
+    // mediaQueue.addMediaItem({ url: audioUrl, type: 'audio' });
+    mediaQueue.next(videoPlayer123, audioPlayer123);
   };
+
   playlistItems.addDivItem(getDivItem(resultsoptions, customCallback));
   console.log("playlistItems", playlistItems);
-  mediaQueue.addMediaItem(data);
-  mediaQueue.playCurrentMedia(videoPlayer123, audioPlayer123);
-  // const videoUrl = `http://localhost:9002/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${data.videoId}&mediatype=video`;
-  // const audioUrl = `http://localhost:9002/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${data.videoId}&mediatype=audio`;
-  // // Stream Video
-  // streamMedia(videoUrl, videoPlayer123);
 
-  // // Stream Audio
-  // streamMedia(audioUrl, audioPlayer123);
+  mediaQueue.addMediaItem({ url: videoUrl, type: 'video' });
+  mediaQueue.addMediaItem({ url: audioUrl, type: 'audio' });
+
+  mediaQueue.playCurrentMedia(videoPlayer123, audioPlayer123);
 }
-let isStartPlaying = false;
 socketManager.on('streamMedia', async ({ videoUrl, audioUrl, mediaType, url }) => {
   console.log("streamMedia", videoUrl, audioUrl, mediaType, url);
-
-  const videoUrlresult = url ? `${window.location}ytmusic?action=stream&url=${url}&mediatype=video` : `${window.location}${videoUrl}`;
-  const audioUrlresult = url ? `${window.location}ytmusic?action=stream&url=${url}&mediatype=audio` : `${window.location}${audioUrl}`;
-    // mediaQueue.addMediaUrl(videoUrlresult, "video");
-    // mediaQueue.addMediaUrl(audioUrlresult, "audio");
-  mediaQueue.addMedialUrl2(audioUrlresult, videoUrlresult);
-  if (!isStartPlaying) {
-    isStartPlaying = true;
-    mediaQueue.playCurrentMedia(videoPlayer123, audioPlayer123);
-  }
 });
 
 

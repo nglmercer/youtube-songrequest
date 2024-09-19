@@ -21,6 +21,9 @@ const ytDownloader = new YTStreamDownloader()
 server.listen(port, () => {
   console.log(`Server running on port ${port}!`);
 });
+// socketManager.on('ytstream', ({ url, mediaType, outputPath }) => {
+
+// })
 app.get('/ytmusic', async (req, res) => {
   const { action, query, url, outputPath = 'output.mp3' || 'output.mp4' } = req.query;
 
