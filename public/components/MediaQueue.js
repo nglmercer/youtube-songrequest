@@ -40,8 +40,8 @@ export default class MediaQueue {
     let cachedMedia = this.cache.get(existvideoid); // Asegúrate de usar el id correcto
     if (!cachedMedia) {
       // Si no está en caché, obtener los enlaces de video y audio
-      const videoUrl = `${window.location}/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${existvideoid}&mediatype=video`;
-      const audioUrl = `${window.location}/ytmusic?action=stream&url=https://www.youtube.com/watch?v=${existvideoid}&mediatype=audio`;
+      const videoUrl = `${window.location}ytmusic?action=stream&url=https://www.youtube.com/watch?v=${existvideoid}&mediatype=video`;
+      const audioUrl = `${window.location}ytmusic?action=stream&url=https://www.youtube.com/watch?v=${existvideoid}&mediatype=audio`;
 
       cachedMedia = { videoUrl, audioUrl };
       this.cache.set(existvideoid, cachedMedia);

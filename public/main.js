@@ -122,7 +122,7 @@ function mapResultOptions(data) {
 socketManager.on('getPlaylist', (data) => handlePlaylistInfo(data));
 async function fetchPlaylistInfo(playlistId, data) {
   try {
-    const url = new URL(window.location + '/ytmusic');
+    const url = new URL(window.location + 'ytmusic');
     url.searchParams.append('action', 'getplaylist');
     url.searchParams.append('query', playlistId);
 
@@ -190,10 +190,10 @@ socketManager.on('streamMedia', ({ videoUrl, audioUrl, mediaType }) => {
 
   setTimeout(() => {
     if (mediaType === 'video') {
-      videoPlayer123.src = videoUrl;
+      videoPlayer123.src = `${window.location}` + videoUrl;
     }
     if (mediaType === 'audio') {
-      audioPlayer123.src = audioUrl;
+      audioPlayer123.src = `${window.location}` + audioUrl;
     }
   }, 1000);
 });
