@@ -1,5 +1,6 @@
 const express = require('express')
 const fs = require('fs')
+const { pipeline } = require('stream');
 const path = require('path')
 const cors = require('cors')
 const http = require('http');
@@ -26,8 +27,7 @@ app.get('/ytmusic', async (req, res) => {
   handleYtmusicRequest(action, query, url, outputPath, req, res);
 });
 let lastStreamedUrl = null; // Guardar el último URL emitido
-
-// Función para manejar las solicitudes de YouTube
+const streamCache = new Map(); // Caché de streams
 async function handleYtmusicRequest(action, query, url, outputPath,req = null, res = null, socket = null) {
   if (!action) {
     if (res) {
@@ -82,37 +82,42 @@ async function handleYtmusicRequest(action, query, url, outputPath,req = null, r
         }
         break;
 
-      case 'stream':
+        case 'stream':
         if (!url) {
           if (res) return res.status(400).send('URL not specified');
           if (socket) return socket.emit('error', 'URL not specified');
         }
 
         const mediaType = res ? req.query.mediatype : socket.query.mediatype || 'audio';
-        const ytStream = await ytDownloader.stream(url, { type: mediaType });
 
-        if (res) {
+        // Generar una URL única para el stream
+        const streamId = Math.random().toString(36).substring(7);
+        if (streamCache.has(streamId)) {
+          const cachedStream = streamCache.get(streamId);
           res.setHeader('Content-Type', mediaType === 'video' ? 'video/mp4' : 'audio/mpeg');
-          ytStream.pipe(res); // Transmitir vía HTTP
-        }
-        console.log("streamMedia.....");
-        if (lastStreamedUrl !== url) {
-          lastStreamedUrl = url; // Actualizar la última URL emitida
+          cachedStream.pipe(res); // Transmitir vía HTTP
+        } else {
+          const ytStream = await ytDownloader.stream(url, { type: mediaType });
 
-          socketManager.emitEventToAll('streamMedia', {
-            url,
-            mediaType,
-            videoUrl: `/ytmusic?action=stream&url=${url}&mediatype=video`,
-            audioUrl: `/ytmusic?action=stream&url=${url}&mediatype=audio`
-          });
-        }
-        // if (socket) {
-        //   // Si estás usando socket, podrías emitir información relevante
-        //   socket.emit('stream', { url, mediaType });
+          // Almacenar el stream en caché
+          streamCache.set(streamId, ytStream);
 
-        //   // Nota: Aquí no estamos transmitiendo el archivo multimedia en sí, solo el metadata.
-        // }
-        break;
+          if (res) {
+            res.setHeader('Content-Type', mediaType === 'video' ? 'video/mp4' : 'audio/mpeg');
+            ytStream.pipe(res); // Transmitir vía HTTP
+          }
+        }
+          if (lastStreamedUrl !== url) {
+            lastStreamedUrl = url; // Actualizar la última URL emitida
+            console.log("url", url, mediaType);
+            socketManager.emitEventToAll('streamMedia', {
+              url,
+              mediaType,
+              videoUrl: `ytmusic?action=stream&url=${url}&mediatype=video=${streamId}`,
+              audioUrl: `ytmusic?action=stream&url=${url}&mediatype=audio=${streamId}`
+            });
+          }
+          break;
 
       default:
         if (res) return res.status(400).send('Invalid action');
@@ -128,53 +133,84 @@ async function handleYtmusicRequest(action, query, url, outputPath,req = null, r
     }
   }
 }
+
+
 app.get('/media', (req, res) => {
-  const mediaType = req.query.mediatype
-  const mediaPath = req.query.path ? req.query.path : getDefaultMediaPath(mediaType)
+  const mediaType = req.query.mediatype;
+  const mediaPath = req.query.path ? req.query.path : getDefaultMediaPath(mediaType);
   if (!mediaType) {
-    return res.status(400).send('Media type not specified')
+    return res.status(400).send('Media type not specified');
   }
   if (!fs.existsSync(mediaPath)) {
-    return res
-      .status(404)
-      .send(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} not found`)
+    return res.status(404).send(`${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)} not found`);
   }
 
-  const stat = fs.statSync(mediaPath)
-  const fileSize = stat.size
-  const range = req.headers.range
-  const contentType = getContentType(mediaType)
+  const stat = fs.statSync(mediaPath);
+  const fileSize = stat.size;
+  const range = req.headers.range;
+  const contentType = getContentType(mediaType);
+
+  // Aumentar el tamaño del chunk a 10MB (ajusta según tus necesidades)
+  const CHUNK_SIZE = 10 * 1024 * 1024;
 
   if (range && mediaType === 'video') {
-    const parts = range.replace(/bytes=/, '').split('-')
-    const start = parseInt(parts[0], 10)
-    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1
+    const parts = range.replace(/bytes=/, '').split('-');
+    let start = parseInt(parts[0], 10);
+    let end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + CHUNK_SIZE, fileSize - 1);
 
     if (start >= fileSize) {
-      res.status(416).send('Requested range not satisfiable')
-      return
+      res.status(416).send('Requested range not satisfiable');
+      return;
     }
 
-    const chunkSize = end - start + 1
-    const file = fs.createReadStream(mediaPath, { start, end })
     const head = {
       'Content-Range': `bytes ${start}-${end}/${fileSize}`,
       'Accept-Ranges': 'bytes',
-      'Content-Length': chunkSize,
+      'Content-Length': end - start + 1,
       'Content-Type': contentType
-    }
+    };
 
-    res.writeHead(206, head)
-    file.pipe(res)
+    res.writeHead(206, head);
+
+    const fileStream = fs.createReadStream(mediaPath, {
+      start,
+      end,
+      highWaterMark: 64 * 1024 // Aumentar el tamaño del buffer interno
+    });
+
+    pipeline(
+      fileStream,
+      res,
+      (err) => {
+        if (err) {
+          console.error('Pipeline failed', err);
+        }
+      }
+    );
   } else {
     const head = {
       'Content-Length': fileSize,
       'Content-Type': contentType
-    }
-    res.writeHead(200, head)
-    fs.createReadStream(mediaPath).pipe(res)
+    };
+    res.writeHead(200, head);
+
+    const fileStream = fs.createReadStream(mediaPath, {
+      highWaterMark: 64 * 1024 // Aumentar el tamaño del buffer interno
+    });
+
+    pipeline(
+      fileStream,
+      res,
+      (err) => {
+        if (err) {
+          console.error('Pipeline failed', err);
+        }
+      }
+    );
   }
-})
+});
+
+
 function getContentType(mediaType) {
   switch (mediaType) {
     case 'video':

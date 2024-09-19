@@ -1,3 +1,96 @@
+class SynchronizedStreamPlayer {
+  constructor() {
+    this.audioPlayer = document.getElementById('audioPlayer');
+    this.videoPlayer = document.getElementById('videoPlayer2');
+    this.playBtn = document.getElementById('playBtn');
+    this.progressBar = document.getElementById('progressBar');
+    this.volumeSlider = document.getElementById('volumeSlider');
+
+    this.isPlaying = false;
+    this.isSeeking = false;
+
+    this.initEventListeners();
+  }
+
+  initEventListeners() {
+    this.playBtn.addEventListener('click', () => this.togglePlayPause());
+    this.audioPlayer.addEventListener('timeupdate', () => this.updateProgressAndSync());
+    this.audioPlayer.addEventListener('play', () => this.updateIconPlayPause(true));
+    this.audioPlayer.addEventListener('pause', () => this.updateIconPlayPause());
+    this.videoPlayer.addEventListener('timeupdate', () => this.updateProgressAndSync());
+    this.videoPlayer.addEventListener('play', () => this.updateIconPlayPause(true));
+    this.videoPlayer.addEventListener('pause', () => this.updateIconPlayPause());
+    this.progressBar.addEventListener('input', () => this.seek());
+    this.volumeSlider.addEventListener('input', () => this.adjustVolume());
+  }
+
+  async togglePlayPause() {
+    if (this.isPlaying) {
+      this.pause();
+    } else {
+      this.play();
+    }
+  }
+
+  async play() {
+    try {
+      await Promise.all([this.audioPlayer.play(), this.videoPlayer.play()]);
+      this.isPlaying = true;
+      this.playBtn.textContent = '❚❚';
+    } catch (error) {
+      console.error('Error al reproducir:', error);
+    }
+  }
+
+  async updateIconPlayPause(playstatus) {
+    if (playstatus) {
+      this.isPlaying = true;
+    }
+    if (this.isPlaying) {
+      this.playBtn.textContent = '❚❚';
+    } else {
+      this.playBtn.textContent = '▶';
+    }
+  }
+
+  pause() {
+    this.audioPlayer.pause();
+    this.videoPlayer.pause();
+    this.isPlaying = false;
+    this.playBtn.textContent = '▶';
+  }
+
+  updateProgressAndSync() {
+    if (!this.isSeeking && !isNaN(this.audioPlayer.duration)) {
+      const progress = (this.audioPlayer.currentTime / this.audioPlayer.duration) * 100;
+      this.progressBar.value = progress;
+
+      // Sincronizar solo si la diferencia es significativa
+      if (Math.abs(this.audioPlayer.currentTime - this.videoPlayer.currentTime) > 0.5) {
+        this.videoPlayer.currentTime = this.audioPlayer.currentTime;
+      }
+    }
+  }
+
+  seek() {
+    this.isSeeking = true;
+    if (!isNaN(this.audioPlayer.duration)) {
+      const newTime = (this.progressBar.value / 100) * this.audioPlayer.duration;
+      this.audioPlayer.currentTime = newTime;
+      this.videoPlayer.currentTime = newTime;
+    }
+    this.isSeeking = false;
+  }
+
+  adjustVolume() {
+    this.audioPlayer.volume = this.volumeSlider.value / 100;
+    this.videoPlayer.volume = this.audioPlayer.volume; // Asegura que el volumen de video esté sincronizado
+  }
+}
+
+
+const player = new SynchronizedStreamPlayer();
+
 export default class MediaQueue {
   constructor() {
     this.playlist = [];
@@ -5,10 +98,29 @@ export default class MediaQueue {
     this.cache = new Map(); // Caché para almacenar los videos y audios
   }
 
-  // Añadir elemento a la playlist
+  // Añadir elemento a la playlist si no existe o actualizar si el src es diferente
   addMediaItem(mediaItem) {
-    this.playlist.push(mediaItem);
-    console.log("addMediaItem", mediaItem);
+    const existingItem = this.playlist.find(item => item.url === mediaItem.url);
+    if (!existingItem) {
+      this.playlist.push(mediaItem);
+      console.log("Nuevo item añadido a la playlist", mediaItem);
+    } else if (existingItem.src !== mediaItem.src) {
+      existingItem.src = mediaItem.src;
+      console.log("Src actualizado para el item existente", mediaItem);
+    } else {
+      console.log("Item ya existe en la playlist con el mismo src", mediaItem);
+    }
+  }
+
+  // Añadir URL directa de video/audio a la playlist
+  addMediaUrl(mediaUrl, mediaType, src) {
+    const mediaItem = { url: mediaUrl, type: mediaType, src: src };
+    this.addMediaItem(mediaItem);
+  }
+
+  addMedialUrl2(audioUrl, videoUrl, audioSrc, videoSrc) {
+    this.addMediaItem({ url: audioUrl, type: 'audio', src: audioSrc });
+    this.addMediaItem({ url: videoUrl, type: 'video', src: videoSrc });
   }
 
   // Quitar elemento de la playlist por índice
@@ -22,57 +134,66 @@ export default class MediaQueue {
 
   // Reproducir el elemento actual
   async playCurrentMedia(videoPlayer, audioPlayer) {
-    let existvideoid = null;
     const currentItem = this.playlist[this.currentIndex];
     if (!currentItem) {
       console.error('No hay más elementos en la playlist.');
       return;
     }
 
-    const { videoId } = currentItem;
-    if (!videoId) {
-      existvideoid = currentItem.video_id;
+    if (currentItem.url) {
+      // Verificar si el src actual es el mismo
+      if (currentItem.type === 'video' && videoPlayer.src === currentItem.src) {
+        console.log('El video ya tiene el src correcto');
+        return;
+      } else if (currentItem.type === 'audio' && audioPlayer.src === currentItem.src) {
+        console.log('El audio ya tiene el src correcto');
+        return;
+      }
+
+      // Si el src es diferente, actualizarlo y reproducir
+      await this.streamMedia(currentItem.src, currentItem.type === 'video' ? videoPlayer : audioPlayer);
     } else {
-      existvideoid = videoId;
+      const videoId = currentItem.videoId || currentItem.video_id;
+
+      // Chequear si ya está en el caché
+      let cachedMedia = this.cache.get(videoId);
+      if (!cachedMedia) {
+        // Obtener los enlaces de video y audio si no están en caché
+        const videoUrl = `${window.location}ytmusic?action=stream&url=https://www.youtube.com/watch?v=${videoId}&mediatype=video`;
+        const audioUrl = `${window.location}ytmusic?action=stream&url=https://www.youtube.com/watch?v=${videoId}&mediatype=audio`;
+        cachedMedia = { videoUrl, audioUrl };
+        this.cache.set(videoId, cachedMedia);
+      }
+
+      // Verificar y actualizar src si es necesario
+      if (videoPlayer.src !== cachedMedia.videoUrl) {
+        await this.streamMedia(cachedMedia.videoUrl, videoPlayer);
+      }
+      if (audioPlayer.src !== cachedMedia.audioUrl) {
+        await this.streamMedia(cachedMedia.audioUrl, audioPlayer);
+      }
     }
 
-    // Chequear si ya está en el caché
-    let cachedMedia = this.cache.get(existvideoid); // Asegúrate de usar el id correcto
-    if (!cachedMedia) {
-      // Si no está en caché, obtener los enlaces de video y audio
-      const videoUrl = `${window.location}ytmusic?action=stream&url=https://www.youtube.com/watch?v=${existvideoid}&mediatype=video`;
-      const audioUrl = `${window.location}ytmusic?action=stream&url=https://www.youtube.com/watch?v=${existvideoid}&mediatype=audio`;
-
-      cachedMedia = { videoUrl, audioUrl };
-      this.cache.set(existvideoid, cachedMedia);
-    }
-
-    // Reproducir video y audio
-    await this.streamMedia(cachedMedia.videoUrl, videoPlayer);
-    await this.streamMedia(cachedMedia.audioUrl, audioPlayer);
+    // Escuchar el evento 'ended' para avanzar al siguiente elemento
+    videoPlayer.onended = () => this.handleMediaEnd(videoPlayer, audioPlayer);
+    audioPlayer.onended = () => this.handleMediaEnd(videoPlayer, audioPlayer);
   }
 
-  // Método para retroceder en la playlist
-  previous(videoPlayer, audioPlayer) {
-    if (this.playlist.length === 1) {
-      // Caso especial: solo hay un elemento en la playlist
-      console.log('Solo hay un elemento en la playlist, reproduciendo el mismo.');
-      this.playCurrentMedia(videoPlayer, audioPlayer);
-    } else if (this.currentIndex > 0) {
-      this.currentIndex--;
-      this.playCurrentMedia(videoPlayer, audioPlayer);
+  // Método para manejar el final del contenido
+  handleMediaEnd(videoPlayer, audioPlayer) {
+    if (this.currentIndex < this.playlist.length - 1) {
+      this.next(videoPlayer, audioPlayer);
     } else {
-      console.log('Ya estás en el primer elemento de la playlist.');
+      console.log('Fin de la playlist. Reiniciando.');
+      videoPlayer.pause();
+      audioPlayer.pause();
+      this.currentIndex = 0; // Reiniciar la playlist
     }
   }
 
   // Método para avanzar en la playlist
   next(videoPlayer, audioPlayer) {
-    if (this.playlist.length === 1) {
-      // Caso especial: solo hay un elemento en la playlist
-      console.log('Solo hay un elemento en la playlist, reproduciendo el mismo.');
-      this.playCurrentMedia(videoPlayer, audioPlayer);
-    } else if (this.currentIndex < this.playlist.length - 1) {
+    if (this.currentIndex < this.playlist.length - 1) {
       this.currentIndex++;
       this.playCurrentMedia(videoPlayer, audioPlayer);
     } else {
@@ -81,16 +202,11 @@ export default class MediaQueue {
   }
 
   // Método para hacer streaming de video/audio
-  async streamMedia(url, mediaElement) {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Network response was not ok');
-    }
-    mediaElement.src = response.url;
+  streamMedia(url, mediaElement) {
+    mediaElement.src = url;
     mediaElement.play();
   }
 }
-
 export class ScrollableContainer {
   constructor(containerId, config = {}) {
     this.container = document.getElementById(containerId);
@@ -113,6 +229,7 @@ export class ScrollableContainer {
     this.container.appendChild(item);
     this.updateVisibleItems(); // Actualizar los elementos visibles después de añadir
   }
+
   addDivItem(div) {
     const item = div;
     item.classList.add(this.itemClass);
@@ -120,6 +237,7 @@ export class ScrollableContainer {
     this.container.appendChild(item);
     this.updateVisibleItems(); // Actualizar los elementos visibles después de añadir
   }
+
   // Establecer el índice del elemento actual
   setCurrent(index) {
     if (index < 0 || index >= this.items.length) {

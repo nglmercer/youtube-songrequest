@@ -22,8 +22,8 @@ export default class UserData {
       this.userData[type].splice(index, 1);
     }
 
-    // Añadir el nuevo item al final del array
-    this.userData[type].push(item);
+    // Añadir el nuevo item al inicio del array
+    this.userData[type].unshift(item);
 
     this.saveUserData();
   }
@@ -41,11 +41,17 @@ export default class UserData {
     }
     return this.userData[type];
   }
-
+  getItems(type) {
+    if (!this.userData[type]) {
+      throw new Error(`Tipo inválido: ${type}`);
+    }
+    return this.userData[type];
+  }
   clearItems(type) {
     if (!this.userData[type]) {
       throw new Error(`Tipo inválido: ${type}`);
     }
+
     this.userData[type] = [];
     this.saveUserData();
   }
@@ -56,13 +62,14 @@ export default class UserData {
 }
 
 export class DivManager {
-  constructor(containerId, divClass, initialData = []) {
+  constructor(containerId, divClass, initialData = [], onClickCallback = null) {
     this.container = document.getElementById(containerId);
     if (!this.container) {
       throw new Error(`Container with id '${containerId}' not found`);
     }
     this.divClass = divClass;
     this.divs = new Map(); // Usamos un Map para almacenar los divs con sus IDs
+    this.onClickCallback = onClickCallback; // Callback que se ejecutará al hacer clic
     this.init(initialData);
   }
 
@@ -74,6 +81,12 @@ export class DivManager {
     const div = document.createElement('div');
     div.className = this.divClass;
     div.textContent = typeof item === 'object' ? JSON.stringify(item) : item;
+
+    // Agregamos un evento de click que ejecuta el callback si está definido
+    if (this.onClickCallback) {
+      div.addEventListener('click', () => this.onClickCallback(item, div));
+    }
+
     return div;
   }
 
@@ -124,6 +137,7 @@ export class DivManager {
     return this.divs.size;
   }
 }
+
 // const manager = new DynamicDivManager('myContainer', 'dynamic-div', ['Initial Item 1', 'Initial Item 2']);
 
 // // Añadir un nuevo div
