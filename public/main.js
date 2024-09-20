@@ -4,6 +4,7 @@ import AudioPlayer from './components/AudioPlayer.js';
 import MediaQueue, { ScrollableContainer } from './components/MediaQueue.js';
 import UserData, { DivManager } from './components/Userdata.js';
 import socketManager from './components/socket.js';
+// import SocketManager from '../server/socketmanager.js';
 
 const videoPlayer = document.getElementById('videoPlayer');
 const playlist = document.getElementById('playlist');
@@ -167,11 +168,14 @@ if (localStorage.getItem('lastPlaylistInfo')) {
 }
 // Ejemplo de uso
 async function getAndPlay(data, resultsoptions) {
-  console.log("getAndPlay", data);
-
+  console.log("getAndPlay", data, resultsoptions);
+  socketManager.emitMessage('getAndPlay', { data, resultsoptions });
+}
+socketManager.on('getAndPlayResponse', (responsedata) => {
+  const { data: { data, resultsoptions } } = responsedata;
   const videoId = data.videoId || data.video_id;
   if (!videoId) {
-    console.error('Video ID is undefined');
+    console.error('Video ID is undefined',responsedata);
     return;
   }
 
@@ -185,13 +189,13 @@ async function getAndPlay(data, resultsoptions) {
   };
 
   playlistItems.addDivItem(getDivItem(resultsoptions, customCallback));
-  console.log("playlistItems", playlistItems);
+  console.log("playlistItems", playlistItems, videoUrl, audioUrl);
 
-  mediaQueue.addMediaItem({ url: videoUrl, type: 'video' });
-  mediaQueue.addMediaItem({ url: audioUrl, type: 'audio' });
-
+  // mediaQueue.addMediaItem({ url: videoUrl, type: 'video' });
+  // mediaQueue.addMediaItem({ url: audioUrl, type: 'audio' });
+  mediaQueue.addMediaUrls(audioUrl, videoUrl, audioPlayer123, videoPlayer123);
   mediaQueue.playCurrentMedia(videoPlayer123, audioPlayer123);
-}
+});
 socketManager.on('streamMedia', async ({ videoUrl, audioUrl, mediaType, url }) => {
   console.log("streamMedia", videoUrl, audioUrl, mediaType, url);
 });
@@ -205,26 +209,6 @@ async function streamMedia(url, mediaElement) {
   }
   mediaElement.src = response.url;
 }
-
-
-
-// mediaQueue.addMediaItem({
-//   videoId: 'abc123',
-//   name: 'Video de ejemplo'
-// });
-// mediaQueue.addMediaItem({
-//   videoId: 'def456',
-//   name: 'Otro video de ejemplo'
-// });
-
-// // Reproducir primer elemento
-// mediaQueue.playCurrentMedia(videoPlayer123, audioPlayer123);
-
-// // Para avanzar al siguiente
-// mediaQueue.next(videoPlayer123, audioPlayer123);
-
-// // Para retroceder
-// mediaQueue.previous(videoPlayer123, audioPlayer123);
 
 const playVideoFromServer = (videoPath) => {
     const videoUrl = `/media?mediatype=video&path=${encodeURIComponent(videoPath)}`;

@@ -17,7 +17,9 @@ class SocketManager {
     this.io.on('connection', (socket) => this.handleConnection(socket));
   }
   on(event, callback) {
-    this.io.on(event, callback);
+    this.io.on('connection', (socket) => {
+      socket.on(event, (data) => callback(data, socket));
+    });
   }
   // Manejar nuevas conexiones
   handleConnection(socket) {
@@ -50,7 +52,7 @@ class SocketManager {
   }
 
   // Emitir un mensaje a todos los sockets conectados
-  emitToAll(message) {
+  emitMessageToAll(message) {
     for (const [socketId, socket] of this.socketsMap.entries()) {
       socket.emit('message', message);
     }

@@ -97,10 +97,11 @@ export default class MediaQueue {
     this.currentIndex = 0;
   }
 
-  // Añadir elemento a la playlist si no existe o actualizar si el src es diferente
+  // Añadir o actualizar un item en la playlist
   addMediaItem(mediaItem) {
-    console.log("addMediaItem", mediaItem);
+    console.log("Añadiendo/Actualizando mediaItem", mediaItem);
     const existingItem = this.playlist.find(item => item.url === mediaItem.url);
+
     if (!existingItem) {
       this.playlist.push(mediaItem);
       console.log("Nuevo item añadido a la playlist", mediaItem);
@@ -112,17 +113,26 @@ export default class MediaQueue {
     }
   }
 
-  // Añadir URL directa de video/audio a la playlist
+  // Añadir una URL de media a la playlist (audio o video)
   addMediaUrl(mediaUrl, mediaType, src) {
     const mediaItem = { url: mediaUrl, type: mediaType, src: src };
     this.addMediaItem(mediaItem);
   }
 
-  addMedialUrl2(audioUrl, videoUrl, audioSrc, videoSrc) {
-    this.addMediaItem({ url: audioUrl, type: 'audio', src: audioSrc });
-    this.addMediaItem({ url: videoUrl, type: 'video', src: videoSrc });
+  // Añadir dos URLs (audio y video) con sus respectivas fuentes
+  addMediaUrls(audioUrl, videoUrl, audioSrc, videoSrc) {
+    if (audioUrl && videoUrl) {
+      const mediaItem = {
+        audio: { url: audioUrl, type: 'audio', src: audioSrc },
+        video: { url: videoUrl, type: 'video', src: videoSrc }
+      };
+      this.playlist.push(mediaItem);
+    } else {
+      console.error('Ambos URLs (audio y video) son necesarios para sincronización.');
+    }
   }
 
+  // Eliminar un elemento de la playlist según su índice
   removeMediaItem(index) {
     if (index >= 0 && index < this.playlist.length) {
       this.playlist.splice(index, 1);
@@ -130,6 +140,8 @@ export default class MediaQueue {
       console.error('Índice fuera de rango');
     }
   }
+
+  // Reproducir el media actual (audio y video)
   async playCurrentMedia(videoPlayer, audioPlayer) {
     const currentItem = this.playlist[this.currentIndex];
     if (!currentItem) {
@@ -137,22 +149,20 @@ export default class MediaQueue {
       return;
     }
 
-    if (currentItem.url) {
-      if (currentItem.type === 'video') {
-        videoPlayer.src = currentItem.url;
-        videoPlayer.play();
-      } else if (currentItem.type === 'audio') {
-        audioPlayer.src = currentItem.url;
-        audioPlayer.play();
-      }
+    if (currentItem.video && currentItem.audio) {
+      videoPlayer.src = currentItem.video.url;
+      audioPlayer.src = currentItem.audio.url;
+      await Promise.all([videoPlayer.play(), audioPlayer.play()]);
     } else {
-      console.error('URL no definida para el elemento actual');
+      console.error('Ambos medios (audio y video) son necesarios para sincronización.');
     }
 
     // Escuchar el evento 'ended' para avanzar al siguiente elemento
     videoPlayer.onended = () => this.handleMediaEnd(videoPlayer, audioPlayer);
     audioPlayer.onended = () => this.handleMediaEnd(videoPlayer, audioPlayer);
   }
+
+  // Manejar el fin de la reproducción
   handleMediaEnd(videoPlayer, audioPlayer) {
     if (this.currentIndex < this.playlist.length - 1) {
       this.next(videoPlayer, audioPlayer);
@@ -160,23 +170,25 @@ export default class MediaQueue {
       console.log('Fin de la playlist. Reiniciando.');
       videoPlayer.pause();
       audioPlayer.pause();
-      this.currentIndex = 0; // Reiniciar la playlist
+      this.currentIndex = 0;
     }
   }
 
+  // Pasar al siguiente media en la playlist
   next(videoPlayer, audioPlayer) {
     if (this.currentIndex < this.playlist.length - 1) {
       this.currentIndex++;
-      this.playCurrentMedia(videoPlayer, audioPlayer);
-    } else {
-      this.playCurrentMedia(videoPlayer, audioPlayer);
     }
+    this.playCurrentMedia(videoPlayer, audioPlayer);
   }
+
+  // Stream directo a un elemento multimedia
   streamMedia(url, mediaElement) {
     mediaElement.src = url;
     mediaElement.play();
   }
 }
+
 export class ScrollableContainer {
   constructor(containerId, config = {}) {
     this.container = document.getElementById(containerId);

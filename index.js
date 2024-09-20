@@ -17,7 +17,11 @@ const server = http.createServer(app);
 const socketManager = new SocketManager(server); // Crear instancia de SocketManager
 const ytmusicmanager = new YTMusicManager()
 const ytDownloader = new YTStreamDownloader()
-
+socketManager.on('getAndPlay', (data) => handleGetAndPlay(data));
+function handleGetAndPlay(data, resultsoptions) {
+  // console.log("handleGetAndPlay", data);
+  socketManager.emitEventToAll('getAndPlayResponse', { data, resultsoptions });
+}
 server.listen(port, () => {
   console.log(`Server running on port ${port}!`);
 });
@@ -29,9 +33,62 @@ app.get('/ytmusic', async (req, res) => {
 
   handleYtmusicRequest(action, query, url, outputPath, req, res);
 });
+class StreamCache {
+  constructor() {
+    this.cache = {}; // Cache será un objeto donde las claves son las URLs
+  }
+
+  // Añadir un stream de tipo audio o video a una URL
+  addStream(url, mediaType, stream) {
+    if (!this.cache[url]) {
+      this.cache[url] = { audio: null, video: null }; // Inicializar si no existe
+    }
+    this.cache[url][mediaType] = stream;
+    console.log(`StreamCache.addStream: Added ${mediaType} stream for ${url}`);
+  }
+
+  // Añadir ambos streams (audio y video) a una URL
+  addStreams(url, audioStream, videoStream) {
+    if (!this.cache[url]) {
+      this.cache[url] = { audio: null, video: null }; // Inicializar si no existe
+    }
+    this.cache[url].audio = audioStream;
+    this.cache[url].video = videoStream;
+    console.log(`StreamCache.addStreams: Added audio and video streams for ${url}`);
+  }
+
+  // Obtener un stream de una URL según el tipo
+  getStream(url, mediaType) {
+    if (this.cache[url] && this.cache[url][mediaType]) {
+      console.log(`StreamCache.getStream: ${mediaType} stream exists for ${url}`);
+      return this.cache[url][mediaType];
+    }
+    console.log(`StreamCache.getStream: ${mediaType} stream does not exist for ${url}`);
+    return null;
+  }
+
+  // Verificar si ya existe un stream de cierto tipo para una URL
+  exists(url, mediaType) {
+    const exists = this.cache[url] && this.cache[url][mediaType] !== null;
+    console.log(`StreamCache.exists: ${mediaType} stream ${exists ? 'exists' : 'does not exist'} for ${url}`);
+    return exists;
+  }
+
+  // Método para depuración: imprimir el estado actual de la caché
+  printCache() {
+    console.log('Current StreamCache state:');
+    for (const [url, streams] of Object.entries(this.cache)) {
+      console.log(`  ${url}:`);
+      console.log(`    audio: ${streams.audio ? 'exists' : 'null'}`);
+      console.log(`    video: ${streams.video ? 'exists' : 'null'}`);
+    }
+  }
+}
+
 let lastStreamedUrl = null; // Guardar el último URL emitido
-const streamCache = new Map(); // Caché de streams
-async function handleYtmusicRequest(action, query, url, outputPath,req = null, res = null, socket = null) {
+const streamCache = new StreamCache(); // Usamos la clase StreamCache
+
+async function handleYtmusicRequest(action, query, url, outputPath, req = null, res = null, socket = null) {
   if (!action) {
     if (res) {
       return res.status(400).send('Action not specified');
@@ -86,46 +143,56 @@ async function handleYtmusicRequest(action, query, url, outputPath,req = null, r
         break;
 
         case 'stream':
-        if (!url) {
-          if (res) return res.status(400).send('URL not specified');
-          if (socket) return socket.emit('error', 'URL not specified');
-        }
-
-        const mediaType = res ? req.query.mediatype : socket.query.mediatype || 'audio';
-
-        // Generar una URL única para el stream
-        const streamId = Math.random().toString(36).substring(7);
-        if (streamCache.has(streamId)) {
-          const cachedStream = streamCache.get(streamId);
-          res.setHeader('Content-Type', mediaType === 'video' ? 'video/mp4' : 'audio/mpeg');
-          cachedStream.pipe(res); // Transmitir vía HTTP
-        } else {
-          const ytStream = await ytDownloader.stream(url, { type: mediaType });
-
-          // Almacenar el stream en caché
-          streamCache.set(streamId, ytStream);
-
-          if (res) {
-            res.setHeader('Content-Type', mediaType === 'video' ? 'video/mp4' : 'audio/mpeg');
-            ytStream.pipe(res); // Transmitir vía HTTP
+          if (!url) {
+            if (res) return res.status(400).send('URL not specified');
+            if (socket) return socket.emit('error', 'URL not specified');
           }
-        }
-          if (lastStreamedUrl !== url) {
-            lastStreamedUrl = url; // Actualizar la última URL emitida
-            console.log("url", url, mediaType);
-            socketManager.emitEventToAll('streamMedia', {
-              url,
-              mediaType,
-              videoUrl: `ytmusic?action=stream&url=${url}&mediatype=video=${streamId}`,
-              audioUrl: `ytmusic?action=stream&url=${url}&mediatype=audio=${streamId}`
-            });
+          streamCache.printCache();
+
+          const mediaType = req?.query?.mediatype || socket?.query?.mediatype || 'audio';
+
+          // Verificar si ya existe el stream en el caché
+          if (streamCache.exists(url, mediaType)) {
+            const cachedStream = streamCache.getStream(url, mediaType);
+            if (cachedStream) {
+              res.setHeader('Content-Type', mediaType === 'video' ? 'video/mp4' : 'audio/mpeg');
+              cachedStream.pipe(res); // Transmitir el stream en caché
+            } else {
+              console.error('Cached stream is null:', url, mediaType);
+              res.status(500).send('Cached stream is null');
+            }
+          } else {
+            try {
+              // Si no existe en caché, creamos ambos streams y los almacenamos
+              const audioStream = await ytDownloader.stream(url, { type: 'audio' });
+              const videoStream = await ytDownloader.stream(url, { type: 'video' });
+
+              // Almacenar ambos streams en el caché
+              streamCache.addStreams(url, audioStream, videoStream);
+
+              // Transmitir el stream correspondiente
+              const streamToSend = mediaType === 'video' ? videoStream : audioStream;
+              res.setHeader('Content-Type', mediaType === 'video' ? 'video/mp4' : 'audio/mpeg');
+              streamToSend.pipe(res);
+            } catch (error) {
+              console.error('Error creating stream:', error);
+              res.status(500).send('Error creating stream');
+            }
           }
+
+          // Emitir el evento con las URLs de video y audio
+          socketManager.emitEventToAll('streamMedia', {
+            url,
+            mediaType,
+            videoUrl: `ytmusic?action=stream&url=${url}&mediatype=video`,
+            audioUrl: `ytmusic?action=stream&url=${url}&mediatype=audio`
+          });
+
           break;
-
-      default:
-        if (res) return res.status(400).send('Invalid action');
-        if (socket) return socket.emit('error', 'Invalid action');
-    }
+        default:
+          if (res) return res.status(400).send('Invalid action');
+          if (socket) return socket.emit('error', 'Invalid action');
+      }
   } catch (error) {
     console.error('Error handling YTMusic request:', error);
 
