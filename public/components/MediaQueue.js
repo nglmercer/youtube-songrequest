@@ -5,7 +5,7 @@ class SynchronizedStreamPlayer {
     this.playBtn = document.getElementById('playBtn');
     this.progressBar = document.getElementById('progressBar');
     this.volumeSlider = document.getElementById('volumeSlider');
-
+    this.fullscreenBtn = document.getElementById('fullscreenBtn');
     this.isPlaying = false;
     this.isSeeking = false;
 
@@ -22,6 +22,7 @@ class SynchronizedStreamPlayer {
     this.videoPlayer.addEventListener('pause', () => this.updateIconPlayPause());
     this.progressBar.addEventListener('input', () => this.seek());
     this.volumeSlider.addEventListener('input', () => this.adjustVolume());
+    this.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
   }
 
   async togglePlayPause() {
@@ -85,6 +86,17 @@ class SynchronizedStreamPlayer {
   adjustVolume() {
     this.audioPlayer.volume = this.volumeSlider.value / 100;
     this.videoPlayer.volume = this.audioPlayer.volume; // Asegura que el volumen de video esté sincronizado
+  }
+  toggleFullscreen() {
+    if (this.videoPlayer.requestFullscreen) {
+      this.videoPlayer.requestFullscreen();
+    } else if (this.videoPlayer.webkitRequestFullscreen) {
+      this.videoPlayer.webkitRequestFullscreen();
+    } else if (this.videoPlayer.mozRequestFullScreen) {
+      this.videoPlayer.mozRequestFullScreen();
+    } else if (this.videoPlayer.msRequestFullscreen) {
+      this.videoPlayer.msRequestFullscreen();
+    }
   }
 }
 
@@ -196,26 +208,28 @@ export class ScrollableContainer {
     this.currentIndex = 0;
     this.visibleRange = config.visibleRange || 10; // Cuántos elementos mostrar
     this.itemClass = config.itemClass || 'scrollable-item'; // Clase CSS para los items
-
-    // Configuración del contenedor
+    this.contentdata = [];
+    this.currentdata = {};
     this.container.style.overflowX = 'auto'; // Desplazamiento horizontal
     this.container.style.display = 'flex';   // Mostrar items en fila
   }
 
   // Añadir un nuevo item
-  addItem(content) {
+  addItem(content, data) {
     const item = document.createElement('div');
     item.classList.add(this.itemClass);
     item.innerHTML = content;
     this.items.push(item);
+    this.contentdata.push(data);
     this.container.appendChild(item);
     this.updateVisibleItems(); // Actualizar los elementos visibles después de añadir
   }
 
-  addDivItem(div) {
+  addDivItem(div, data) {
     const item = div;
     item.classList.add(this.itemClass);
     this.items.push(item);
+    this.contentdata.push(data);
     this.container.appendChild(item);
     this.updateVisibleItems(); // Actualizar los elementos visibles después de añadir
   }
@@ -252,7 +266,7 @@ export class ScrollableContainer {
     if (this.items.length === 0) {
       return null;
     }
-    return this.items[this.currentIndex];
+    return {...this.currentIndex, ...this.contentdata[this.currentIndex] };
   }
 
   // Obtener el índice del elemento actual
@@ -290,23 +304,10 @@ export class ScrollableContainer {
 //   itemClass: 'my-item-class' // Clase CSS personalizada
 // });
 
-// // Añadir algunos items
-// scrollableContainer.addItem('Item 1');
-// scrollableContainer.addItem('Item 2');
-// scrollableContainer.addItem('Item 3');
-// scrollableContainer.addItem('Item 4');
-// scrollableContainer.addItem('Item 5');
-// scrollableContainer.addItem('Item 6');
-// scrollableContainer.addItem('Item 7');
-// scrollableContainer.addItem('Item 8');
-// scrollableContainer.addItem('Item 9');
-// scrollableContainer.addItem('Item 10');
+
 
 // // Establecer el elemento actual (mostrar del 5 al 10)
 // scrollableContainer.setCurrent(5);
-
-// // Obtener el elemento actual
-// console.log('Elemento actual:', scrollableContainer.getCurrentItem().innerHTML);
 
 // // Añadir más elementos y mostrarlos
 // scrollableContainer.loadMoreItems(['Item 11', 'Item 12', 'Item 13']);

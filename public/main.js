@@ -4,17 +4,14 @@ import AudioPlayer from './components/AudioPlayer.js';
 import MediaQueue, { ScrollableContainer } from './components/MediaQueue.js';
 import UserData, { DivManager } from './components/Userdata.js';
 import socketManager from './components/socket.js';
+import ElementModifier from './utils/textreplacer.js';
 // import SocketManager from '../server/socketmanager.js';
-
 const videoPlayer = document.getElementById('videoPlayer');
-const playlist = document.getElementById('playlist');
-let videos = [];
-let currentVideoIndex = 0;
-let isPlaying = false;
-let playlistInterval;
+
 const currentUrl = window.location.href;
 console.log(currentUrl);
 
+const InfoPlayer = new ElementModifier('video-information');
 const resultList = new ResultItem('results-container');
 const searchinput = document.getElementById('search-input');
 const userData = new UserData("userData");
@@ -30,6 +27,7 @@ let playlistconfig = {
   itemClass: 'scrollable-item',
 }
 const playlistItems =  new ScrollableContainer("playlist",playlistconfig);
+
 const videoPlayer123 = document.getElementById('videoPlayer2');
 const audioPlayer123 = document.getElementById('audioPlayer');
 document.querySelector(".search-container").addEventListener("submit", async function (event) {
@@ -170,6 +168,13 @@ if (localStorage.getItem('lastPlaylistInfo')) {
 async function getAndPlay(data, resultsoptions) {
   console.log("getAndPlay", data, resultsoptions);
   socketManager.emitMessage('getAndPlay', { data, resultsoptions });
+  const currentsong = playlistItems.getCurrentItem()
+  if (!currentsong) {
+    InfoPlayer.setInnerText('h2', resultsoptions.title);
+    return;
+  }
+  InfoPlayer.setInnerText('h2', currentsong.title);
+  console.log("currentsong", currentsong);
 }
 socketManager.on('getAndPlayResponse', (responsedata) => {
   const { data: { data, resultsoptions } } = responsedata;
@@ -188,7 +193,7 @@ socketManager.on('getAndPlayResponse', (responsedata) => {
     mediaQueue.next(videoPlayer123, audioPlayer123);
   };
 
-  playlistItems.addDivItem(getDivItem(resultsoptions, customCallback));
+  playlistItems.addDivItem(getDivItem(resultsoptions, customCallback), data);
   console.log("playlistItems", playlistItems, videoUrl, audioUrl);
 
   // mediaQueue.addMediaItem({ url: videoUrl, type: 'video' });

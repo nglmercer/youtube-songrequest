@@ -28,11 +28,6 @@ server.listen(port, () => {
 // socketManager.on('ytstream', ({ url, mediaType, outputPath }) => {
 
 // })
-app.get('/ytmusic', async (req, res) => {
-  const { action, query, url, outputPath = 'output.mp3' || 'output.mp4' } = req.query;
-
-  handleYtmusicRequest(action, query, url, outputPath, req, res);
-});
 class StreamCache {
   constructor() {
     this.cache = {}; // Cache será un objeto donde las claves son las URLs
@@ -83,11 +78,26 @@ class StreamCache {
       console.log(`    video: ${streams.video ? 'exists' : 'null'}`);
     }
   }
+  cleanCache() {
+    this.cache = {};
+  }
 }
 
 let lastStreamedUrl = null; // Guardar el último URL emitido
 const streamCache = new StreamCache(); // Usamos la clase StreamCache
+setImmediate(async () => {
+  streamCache.cleanCache();
+}, 1000 * 60 * 10); // Limpiar el cache cada 10 minutos
+app.get('/ytmusic', async (req, res) => {
+  const { action, query, url, outputPath = 'output.mp3' || 'output.mp4' } = req.query;
 
+  handleYtmusicRequest(action, query, url, outputPath, req, res);
+});
+app.post('/ytmusic', async (req, res) => {
+  const { action, query, url, outputPath = 'output.mp3' || 'output.mp4' } = req.body;
+  handleYtmusicRequest(action, query, url, outputPath, req, res);
+  //ytmusic?action=search&query=string
+});
 async function handleYtmusicRequest(action, query, url, outputPath, req = null, res = null, socket = null) {
   if (!action) {
     if (res) {
