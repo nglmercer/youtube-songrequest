@@ -3,7 +3,7 @@ class ResultItem {
       this.container = document.getElementById(containerId);
   }
 
-  addItem(data, onClickCallback = null, insertAtTop = false) {
+  addItem(data, onClickCallback = null, insertAtTop = true) { // Aquí cambias "false" a "true"
     const { imageUrl, title, subtitles = [], duration, videoId } = data;
 
     if (!this.container) {
@@ -55,11 +55,10 @@ class ResultItem {
     // Añadir el contenido al item
     itemDiv.appendChild(contentDiv);
 
-    // Si insertAtTop es verdadero, inserta el nuevo item al principio
+    // Inserta el nuevo item al principio por defecto
     if (insertAtTop) {
         this.container.insertBefore(itemDiv, this.container.firstChild);
     } else {
-        // Si no, lo agrega al final
         this.container.appendChild(itemDiv);
     }
 

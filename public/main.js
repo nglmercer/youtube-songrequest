@@ -85,7 +85,7 @@ function handleResults(results) {
   }).filter(item => item !== undefined); // Filtra los casos que no devuelven un item
 
   // Crear un nuevo bloque de items en la parte superior
-  resultList.addBlock(items, false); // Inserta el bloque en la parte superior
+  resultList.addBlock(items, true); // Inserta el bloque en la parte superior
 }
 function mapResultOptions(data) {
   const commonOptions = {
@@ -158,7 +158,7 @@ function handlePlaylistInfo(playlistInfo) {
   });
 
   // Crear un nuevo bloque de items en la parte superior
-  resultList.addBlock(items, false); // Inserta el bloque en la parte superior
+  resultList.addBlock(items, true); // Inserta el bloque en la parte superior
 }
 if (localStorage.getItem('lastPlaylistInfo')) {
   const lastResultItems = JSON.parse(localStorage.getItem('lastPlaylistInfo'));

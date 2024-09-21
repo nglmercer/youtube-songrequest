@@ -90,12 +90,13 @@ setImmediate(async () => {
 }, 1000 * 60 * 10); // Limpiar el cache cada 10 minutos
 app.get('/ytmusic', async (req, res) => {
   const { action, query, url, outputPath = 'output.mp3' || 'output.mp4' } = req.query;
-
+  console.log("get", query, url);
   handleYtmusicRequest(action, query, url, outputPath, req, res);
 });
 app.post('/ytmusic', async (req, res) => {
   const { action, query, url, outputPath = 'output.mp3' || 'output.mp4' } = req.body;
   handleYtmusicRequest(action, query, url, outputPath, req, res);
+  console.log("post", query, url);
   //ytmusic?action=search&query=string
 });
 async function handleYtmusicRequest(action, query, url, outputPath, req = null, res = null, socket = null) {
