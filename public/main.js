@@ -4,6 +4,46 @@ import AudioPlayer from './components/AudioPlayer.js';
 import MediaQueue, { ScrollableContainer } from './components/MediaQueue.js';
 import UserData, { DivManager } from './components/Userdata.js';
 import socketManager from './components/socket.js';
+const ws = new WebSocket('ws://localhost:3000');
+
+// Evento de conexión establecida
+ws.onopen = () => {
+  console.log('WebSocket connected');
+};
+const actionsevents = {
+  searchSong: {
+    action: 'searchSong',
+    callback: (data) => handleResults(data),
+  },
+  getplaylistinfo: {
+    action: 'getplaylistinfo',
+    callback: (data) => handlePlaylistInfo(data),
+  },
+};
+// Evento de mensaje recibido
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  if (!message.action) {
+    console.log("message", message);
+    return;
+  }
+//  console.log('Message received:', message);
+  if (actionsevents[message.action]) {
+    actionsevents[message.action].callback(message.data);
+  } else {
+    console.log("message", message);
+  }
+};
+
+// Evento de error
+ws.onerror = (error) => {
+  console.error('WebSocket error:', error);
+};
+
+// Evento de desconexión
+ws.onclose = () => {
+  console.log('WebSocket disconnected');
+};
 
 const videoPlayer = document.getElementById('videoPlayer');
 const playlist = document.getElementById('playlist');
@@ -44,19 +84,12 @@ console.log("userData",userData.getLastItems('text', 10))
 async function searchYTMusic(query) {
   userData.addItem('text', query);
   manager.addDiv(query);
-  try {
-      const response = await fetch(`/ytmusic?action=search&query=${encodeURIComponent(query)}`);
+  const message = {
+    action: 'searchSong',
+    data: { query },
+  };
 
-      if (!response.ok) {
-          throw new Error('Network response was not ok');
-      }
-
-      const searchData = await response.json();
-      return searchData;
-  } catch (error) {
-      console.error('Failed to fetch search data:', error);
-      throw error;
-  }
+  ws.send(JSON.stringify(message));
 }
 function handleResults(results) {
   const items = results.map(data => {
@@ -84,7 +117,7 @@ function handleResults(results) {
           return { data: resultsOptions, onClickCallback: callback };
       }
   }).filter(item => item !== undefined); // Filtra los casos que no devuelven un item
-
+  console.log("items", items);
   // Crear un nuevo bloque de items en la parte superior
   resultList.addBlock(items, false); // Inserta el bloque en la parte superior
 }
@@ -116,7 +149,7 @@ function mapResultOptions(data) {
 }
 socketManager.on('getPlaylist', (data) => handlePlaylistInfo(data));
 async function fetchPlaylistInfo(playlistId, data) {
-  try {
+/*   try {
     const url = new URL(window.location + 'ytmusic');
     url.searchParams.append('action', 'getplaylist');
     url.searchParams.append('query', playlistId);
@@ -131,10 +164,16 @@ async function fetchPlaylistInfo(playlistId, data) {
     // handlePlaylistInfo(playlistInfo);
   } catch (error) {
     console.error('Error fetching playlist info:', error);
-  }
+  } */
+  const message = {
+    action: 'getplaylistinfo',
+    data: { playlistId },
+  };
+
+  ws.send(JSON.stringify(message));
 }
 function handlePlaylistInfo(playlistInfo) {
-  if (!playlistInfo.videos) {
+  if (!playlistInfo || !playlistInfo.videos) {
     console.log("playlistInfo return", playlistInfo);
     return;
   }

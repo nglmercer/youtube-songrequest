@@ -1,23 +1,12 @@
-// import YTMusic from 'ytmusic-api';
-// import ytstream from 'yt-stream';
-// // import { ytdown } from "nayan-media-downloader"
-// import WDwloadDlp from 'w-dwload-dlp';
-// import fs from 'fs';
-// const WDwloadDlp = require('w-dwload-dlp');
-
-// const { ytdown } = require("nayan-media-downloader")
-
-const YTMusic = require('ytmusic-api');
-const ytstream = require('yt-stream');
 const fs = require('fs');
 const path = require('path');
-if (!fs.existsSync(path.join(__dirname, 'downloads'))) {
-  fs.mkdirSync(path.join(__dirname, 'downloads'));
-}
+const YTMusic = require('ytmusic-api');
+const ytstream = require('yt-stream');
+
 class YTMusicManager {
   constructor() {
     this.ytmusic = new YTMusic();
-    this.ytmusic.initialize(/* Optional: Custom cookies */);
+    this.ytmusic.initialize(); // Inicialización opcional con cookies
   }
 
   async searchSong(query) {
@@ -25,142 +14,110 @@ class YTMusicManager {
       const songs = await this.ytmusic.search(query);
       return songs;
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error in searchSong:', err);
       throw err;
     }
   }
+
   async getplaylistinfo(playlistId) {
     try {
       const playlist = await this.ytmusic.getPlaylist(playlistId);
       return playlist;
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error in getPlaylistInfo:', err, playlistId);
       throw err;
     }
   }
 }
 
 class YTStreamDownloader {
-    constructor() {
-      this.downloadPath = path.join(__dirname, 'downloads');
-      this.maxFiles = 10;  // número máximo de archivos permitidos
-      this.defaultOptions = {
-        quality: 'high',//low ? high
-        type: 'audio',
-        highWaterMark: 1048576 * 32,
-        download: true,
-      }
+  constructor() {
+    this.downloadPath = path.join(__dirname, 'downloads');
+    this.maxFiles = 10; // Número máximo de archivos permitidos
+    this.defaultOptions = {
+      quality: 'high', // Opciones: low o high
+      type: 'audio',
+      highWaterMark: 1048576 * 32,
+      download: true,
+    };
+
+    if (!fs.existsSync(this.downloadPath)) {
+      fs.mkdirSync(this.downloadPath);
+    }
   }
-      generateUniqueFileName(baseName) {
-        const timestamp = Date.now();
-        return `${timestamp}_${baseName}`;
-    }
-    async download(url, outputname, options) {
-      const finalOutputPath = path.join(this.downloadPath, this.generateUniqueFileName(outputname));
-      const defaultOptions = options || this.defaultOptions;
-      try {
-          const stream = await ytstream.stream(url, defaultOptions);
-          const fileStream = fs.createWriteStream(finalOutputPath);
 
-          stream.stream.pipe(fileStream);
-
-            return { success: true, outputPath: finalOutputPath, videoUrl: stream.video_url };
-          } catch (error) {
-            console.error('Error downloading with YTStreamDownloader:', error);
-            return { success: false, error };
-        }
-    }
-    async stream(url, options) {
-      const finalOptions = { ...this.defaultOptions, ...options };
-
-      try {
-          const stream = await ytstream.stream(url, finalOptions);
-          return stream.stream; // Retorna el stream directamente
-      } catch (error) {
-          console.error('Error streaming with YTStreamDownloader:', error);
-          throw error;
-      }
+  generateUniqueFileName(baseName) {
+    const timestamp = Date.now();
+    return `${timestamp}_${baseName}`;
   }
-    async searchSong(query) {
-        try {
-            const results = await ytstream.search(query);
-            return results;
-        } catch (error) {
-            console.error('Error searching with YTStreamDownloader:', error, query);
-            return { success: false, error };
-        }
-    }
-    async getplaylistinfo(playlistId) {
-      const link = 'https://www.youtube.com/playlist?list='+playlistId;
-      try {
-          console.log("playlistId",playlistId)
-          const isValidUrl = ytstream.validatePlaylistURL(link);
-          if (!isValidUrl) {
-            console.log("isValidUrl",isValidUrl, link)
-            return { success: false, error: 'Invalid playlistId' };
-          } else{
-            console.log("isValidUrl",isValidUrl, link)
-            const results = await ytstream.getPlaylist(link);
-            return results;
-          }
-          // console.log("results",results)
-      } catch (error) {
-          console.error('Error searching with YTStreamDownloader:', error, playlistId, link); //PLYpvI4FtuH4ehPZlSvxJopVsmKCxGJbRU PLYpvI4FtuH4ehPZlSvxJopVsmKCxGJbRU PLYpvI4FtuH4ehPZlSvxJopVsmKCxGJbRU
-          return { success: false, error: error };
-      }
-    }
-    validateUrl(url) {
-      const result = ytstream.validateURL(url);
-      return result;
-    }
-    listDownloadedFiles() {
-      return fs.readdirSync(this.downloadPath);
-    }
 
-    deleteFile(fileName) {
-        const filePath = path.join(this.downloadPath, fileName);
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-            return { success: true, message: `File ${fileName} deleted.` };
-        } else {
-            return { success: false, message: `File ${fileName} not found.` };
-        }
+  async download(url, outputName, options) {
+    const finalOutputPath = path.join(this.downloadPath, this.generateUniqueFileName(outputName));
+    const effectiveOptions = options || this.defaultOptions;
+    try {
+      const stream = await ytstream.stream(url, effectiveOptions);
+      const fileStream = fs.createWriteStream(finalOutputPath);
+
+      stream.stream.pipe(fileStream);
+      return { success: true, outputPath: finalOutputPath, videoUrl: stream.video_url };
+    } catch (error) {
+      console.error('Error in download:', error);
+      return { success: false, error };
     }
+  }
+
+  async stream(url, options) {
+    const effectiveOptions = { ...this.defaultOptions, ...options };
+    try {
+      const stream = await ytstream.stream(url, effectiveOptions);
+      return stream.stream; // Retorna el stream directamente
+    } catch (error) {
+      console.error('Error in stream:', error);
+      throw error;
+    }
+  }
+
+  async searchSong(query) {
+    try {
+      const results = await ytstream.search(query);
+      return results;
+    } catch (error) {
+      console.error('Error in searchSong:', error);
+      throw error;
+    }
+  }
+
+  async getplaylistinfo(playlistId) {
+    const link = `https://www.youtube.com/playlist?list=${playlistId}`;
+    try {
+      if (!ytstream.validatePlaylistURL(link)) {
+        throw new Error('Invalid playlistId');
+      }
+      const results = await ytstream.getPlaylist(link);
+      return results;
+    } catch (err) {
+      console.error('Error in getPlaylistInfo:', err, playlistId);
+      throw err;
+    }
+  }
+
+  validateUrl(url) {
+    return ytstream.validateURL(url);
+  }
+
+  listDownloadedFiles() {
+    return fs.readdirSync(this.downloadPath);
+  }
+
+  deleteFile(fileName) {
+    const filePath = path.join(this.downloadPath, fileName);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      return { success: true, message: `File ${fileName} deleted.` };
+    } else {
+      return { success: false, message: `File ${fileName} not found.` };
+    }
+  }
 }
 
-
 module.exports = { YTMusicManager, YTStreamDownloader };
-// const ytmusicmanager = new YTMusicManager();
-// ytmusicmanager.searchSong('jazz');
-// (async () => {
-//   const ytDownloader = new YTStreamDownloader();
-//   const result = await ytDownloader.download('https://www.youtube.com/watch?v=8ZP5eqm4JqM', 'some_song.mp3');
-//   console.log(result);
-// })();
-// class WDwloadDlpDownloader {
-//   constructor() {
-//       this.url = "https://www.youtube.com/watch?v=8ZP5eqm4JqM";
-//       this.outputPath = "./some_song1.mp3";
-//   }
-//   async download(url, outputPath) {
-//     try {
-//       await WDwloadDlp(url, outputPath, {
-//         clean: true,
-//         funProg: (prog, nn, na) => {
-//           console.log('Progress:', `${prog.toFixed(2)}%`, nn, na);
-//         },
-//         postprocessors: [],
-//       });
-//       console.log(`Download complete: ${outputPath}`);
-//       return { success: true, outputPath };
-//     } catch (error) {
-//       console.error('Error downloading with WDwloadDlpDownloader:', error);
-//       return { success: false, error };
-//     }
-//   }
-// }
-// const downloader = new WDwloadDlpDownloader();
-// (async () => {
-//   const result = await downloader.download('https://www.youtube.com/watch?v=8ZP5eqm4JqM', './some_song123.mp3');
-//   console.log(result);
-// })();
