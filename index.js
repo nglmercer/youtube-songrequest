@@ -112,14 +112,20 @@ wss.on('connection', (ws) => {
           break;
 
         case 'stream':
-          if (!data.url || !data.type) {
-            throw new Error('Missing URL or type');
+          let url;
+          if (!data || !data.url) {
+            throw new Error('Missing URL');
+          } else if (data.videoId && !data.type) {
+            url = `https://www.youtube.com/watch?v=${data.videoId}`;
+          } else {
+            url = data.url;
           }
+          let type = data.type || 'video';
           // Envía un mensaje de confirmación con la URL de streaming
           ws.send(JSON.stringify({ 
             action, 
             success: true, 
-            data: { streamUrl: `http://localhost:${PORT}/stream?url=${encodeURIComponent(data.url)}&type=${data.type}` },
+            data: { streamUrl: `http://localhost:${PORT}/stream?url=${encodeURIComponent(url)}&type=${type}` },
           }));
           break;
         case 'getplaylistinfo':

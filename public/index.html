@@ -6,6 +6,7 @@
     <title>Buscador con Resultados</title>
     <link rel="stylesheet" href="main.css">
     <script src="./components/socket.io.min.js"></script>
+    <script src="./components/webcomponents.js"></script>
 </head>
 <body>
   <div id="ViewPort">
@@ -24,71 +25,20 @@
     </div>
     <div id="MainContent">
       <div class="Sugerencias" id="Sugerencias"></div>
+      <youtube-grid id="results-grid" dark-mode></youtube-grid>
       <div id="results-container" class="results-container">
       </div>
-      <div class="container">
-          <div id="player" class="player">
-            <div class="video-container">
-              <div class="grid-2cols">
-                <div class="left-section">
-                      <div class="video-player">
-                          <video id="videoPlayer2" src="videoexample.mp4">
-                          </video>
-                          <div class="controls">
-                            <button class="play-btn" id="playBtn">▶</button>
-                            <input type="range" class="progress-bar" id="progressBar" value="0" max="100">
-                            🔊<input type="range" class="volume-slider" id="volumeSlider" value="100" max="100">
-                            <button class="fullscreen-btn" id="fullscreenBtn">⛶</button>
-                          </div>
-                            <!-- <video id="videoPlayer" src="" controls></video> -->
-                      </div>
-                      <audio id="audioPlayer"></audio>
-                        <div class="video-information" id="video-information">
-                          <h2>Título del video</h2>
-                        </div>
-                </div>
-                <div class="right-section flex" id="playlist">
-                    <h2 class="justify-content-center">Playlist</h2>
-                </div>
-            </div>
-            </div>
-
-        </div>
-    </div>
   </div>
 </div>
-
-        <script>
-          class YouTubeMinimizer {
-            constructor(containerId, initialWidth, initialHeight, initialBottom, initialRight) {
-                this.container = document.getElementById(containerId);
-                this.container.classList.add('video-container1');
-                this.container.style.width = initialWidth;
-                this.container.style.height = initialHeight;
-                this.container.style.bottom = initialBottom;
-                this.container.style.right = initialRight;
-
-                this.button = document.createElement('button');
-                this.button.classList.add('minimize-btn1');
-                this.button.textContent = 'Minimizar';
-                this.container.appendChild(this.button);
-
-                this.button.addEventListener('click', () => this.toggleMinimize());
-
-                this.isMaximized = false;
-                this.rightSection = document.querySelector('.right-section');
-            }
-            toggleMinimize() {
-                this.isMaximized = !this.isMaximized;
-                this.container.classList.toggle('minimized', this.isMaximized);
-                this.container.classList.toggle('maximized', !this.isMaximized);
-                this.button.textContent = this.isMaximized ? 'Maximizar' : 'Minimizar';
-                this.rightSection.classList.toggle('hidden', this.isMaximized);
-            }
-        }
-        const video1 = new YouTubeMinimizer('player', '95%', 'calc(95% - 60px)', '4dvh', '2dvh');
-        video1.toggleMinimize();
-        </script>
+<mini-player>
+  <div slot="main">
+    <!-- Insertar el componente SyncMediaPlayer dentro de MiniPlayer -->
+    <sync-media-player id="mediaPlayer" audio-src="audio1.mp3" video-src="video1.mp4" autoplay="true"></sync-media-player>  
+  </div>
+  <div slot="details">
+    <p>Detalles adicionales sobre el contenido.</p>
+  </div>
+</mini-player>
         <script src="main.js" type="module"></script>
 </body>
 </html>
