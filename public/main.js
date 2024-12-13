@@ -253,35 +253,39 @@ if (localStorage.getItem('lastPlaylistInfo')) {
 }
 // Ejemplo de uso
 async function getAndPlay(data, resultsoptions) {
-  console.log("getAndPlay", data);
+  try {
+    console.log("getAndPlay", data);
 
-const videoId = data.videoId || data.video_id;
-  if (!videoId) {
-    console.error('Video ID is undefined');
-    return;
+    // Extraer el videoId con manejo de errores
+    const videoId = typeof data.videoId === 'string' ? data.videoId 
+                   : typeof data.video_id === 'string' ? data.video_id 
+                   : null;
+
+    if (!videoId) {
+      console.error('Video ID is invalid or undefined');
+      return;
+    }
+
+    // Verificar que window.location sea un string válido
+    const baseLocation = typeof window.location === 'string' ? window.location : window.location.toString();
+    
+    // Construir URLs de video y audio
+    const videoUrl = `${baseLocation}stream?url=https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}&type=video`;
+    const audioUrl = `${baseLocation}stream?url=https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}&type=audio`;
+
+    // Verificar que mediaPlayer esté definido
+    if (typeof mediaPlayer !== 'undefined' && mediaPlayer.setAttribute) {
+      mediaPlayer.setAttribute('video-src', videoUrl);
+      mediaPlayer.setAttribute('audio-src', audioUrl);
+      console.log("Media player attributes set successfully");
+    } else {
+      console.error('mediaPlayer is not defined or does not support setAttribute');
+    }
+  } catch (error) {
+    console.error('An error occurred in getAndPlay:', error);
   }
-
-  const videoUrl = `${window.location}stream?url=https://www.youtube.com/watch?v=${videoId}&type=video`;
-  const audioUrl = `${window.location}stream?url=https://www.youtube.com/watch?v=${videoId}&type=audio`;
-  mediaPlayer.setAttribute('video-src', videoUrl);
-  mediaPlayer.setAttribute('audio-src', audioUrl);
-/*   const videoPlayer2 = document.getElementById('videoPlayer2');
-  console.log("videoPlayer2", videoPlayer2);
-  videoPlayer2.src = videoUrl; */
-/*   const customCallback = () => {
-    // mediaQueue.addMediaItem({ url: videoUrl, type: 'video' });
-    // mediaQueue.addMediaItem({ url: audioUrl, type: 'audio' });
-    mediaQueue.next(videoPlayer123, audioPlayer123);
-  };
-
-  playlistItems.addDivItem(getDivItem(resultsoptions, customCallback));
-  console.log("playlistItems", playlistItems);
-
-  mediaQueue.addMediaItem({ url: videoUrl, type: 'video' });
-  mediaQueue.addMediaItem({ url: audioUrl, type: 'audio' });
-
-  mediaQueue.playCurrentMedia(videoPlayer123, audioPlayer123); */
 }
+
 
 async function downloadByVideoId(videoId) {
   const url = `/ytmusic?action=download&url=https://www.youtube.com/watch?v=${videoId}`;
