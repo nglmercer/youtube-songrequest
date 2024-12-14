@@ -7,12 +7,12 @@ const http = require('http');
 const ytstream = require('yt-stream');
 const { YTMusicManager, YTStreamDownloader } = require('./server/youtubeDownloader');
 const app = express();
+
 app.use(express.json());
 app.use(cors({ origin: '*' }));
 app.use(express.static('public'));
 
 const PORT = 3000;
-const WS_PORT = 3001;
 const downloadsPath = path.join(__dirname, 'downloads');
 const tempPath = path.join(__dirname, 'temp');
 
@@ -147,7 +147,14 @@ wss.on('connection', (ws) => {
     console.log('Client disconnected');
   });
 });
-
+app.post('/api', (req, res) => {
+  const { event, payload } = req.body;
+  console.log('Evento recibido:', event);
+  console.log('Datos recibidos:', payload);
+  wss.clients.forEach(client => {
+    client.send(JSON.stringify({ action, success: true, data: payload }));
+  });
+});
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

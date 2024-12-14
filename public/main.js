@@ -45,20 +45,23 @@ ws.onerror = (error) => {
 ws.onclose = () => {
   console.log('WebSocket disconnected');
 };
-
-const videoPlayer = document.getElementById('videoPlayer');
-const currentUrl = window.location.href;
-console.log(currentUrl);
-
 //const resultList = new ResultItem('results-container');
-const searchinput = document.getElementById('search-input');
+const carousel = document.querySelector('suggestion-carousel');
+const searchInput = document.querySelector('search-input');
 const userData = new UserData("userData");
-const manager = new DivManager('Sugerencias', 'Sugerencias-div', userData.getLastItems('text', 10), (item, div) => {
-  console.log('Div clicked:', item, div);
-  searchYTMusic(item);
+const allsugestions = userData.getLastItems('text', 10);
+//console.log("userData",userData.getLastItems('text', 10))
+
+allsugestions.forEach(item => carousel.createButton(`${item}`, 'buttonClicked', { message: item }));
+carousel.addEventListener('buttonClicked', (e) => {
+  const elementtext = e.detail.message;
+  if (elementtext && elementtext.length > 0) {
+    console.log(e.detail.message);
+    searchYTMusic(e.detail.message);
+  }
 });
 const mediaPlayer = document.getElementById('mediaPlayer');
-
+//userData.getLastItems('text', 10)
 //const mediaQueue = new MediaQueue();
 let playlistconfig = {
   visibleRange: 10,
@@ -67,19 +70,24 @@ let playlistconfig = {
 /* const playlistItems =  new ScrollableContainer("playlist",playlistconfig);
 const videoPlayer123 = document.getElementById('videoPlayer2');
 const audioPlayer123 = document.getElementById('audioPlayer'); */
-document.querySelector(".search-container").addEventListener("submit", async function (event) {
+/* document.querySelector(".search-container").addEventListener("submit", async function (event) {
   event.preventDefault();
   const query = searchinput.value;
   const searchData = await searchYTMusic(query);
   console.log(searchData);
   // handleResults(searchData);
-});
+}); */
 //socketManager.on('search', (data) => handleResults(data));
 
-console.log("userData",userData.getLastItems('text', 10))
+searchInput.addEventListener('search-submitted', (e) => {
+  const query = e.detail.query;
+  if (query.length > 0) {
+    console.log('Búsqueda enviada:', e.detail.query);
+    searchYTMusic(query);
+  }
+});
 async function searchYTMusic(query) {
   userData.addItem('text', query);
-  manager.addDiv(query);
   const message = {
     action: 'searchSong',
     data: { query },

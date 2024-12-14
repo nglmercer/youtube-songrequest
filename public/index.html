@@ -9,36 +9,79 @@
     <script src="./components/webcomponents.js"></script>
 </head>
 <body>
-  <div id="ViewPort">
-    <div id="NavBar">
-      <form class="search-container">
-        <div class="search-content">
-          <input id="search-input" type="text" class="search-input" placeholder="Buscar">
-          <button id="search-button" class="search-button">
-              <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-              </svg>
-          </button>
-        </div>
 
-      </form>
+  <side-bar>
+    <div slot="sidebar-content">
+<!--         <login-button platform="tiktok"></login-button>
+      <login-button platform="twitch"></login-button>
+      <login-button platform="kick"></login-button> -->
+      
     </div>
-    <div id="MainContent">
-      <div class="Sugerencias" id="Sugerencias"></div>
-      <youtube-grid id="results-grid" dark-mode></youtube-grid>
-      <div id="results-container" class="results-container">
+  </side-bar>
+  
+  <nav-bar>
+    <div slot="navbar-content" class="flex justify-between w-full">
+        <search-input theme="dark"></search-input>
+
+
+        <custom-dropdown mode="dark">
+          <button slot="trigger" class="btn btn-primary absolute top-0">a</button>
+          <login-button platform="tiktok"></login-button>
+          <login-button platform="twitch"></login-button>
+          <login-button platform="kick"></login-button>
+          <nested-menu theme="dark"></nested-menu>
+
+        </custom-dropdown>
+    </div>
+  </nav-bar>
+
+  <main-content>
+    
+    <div slot="1-content" style="        margin-left: calc(5% - 20px);">
+        <div>          
+          <ytmusic-guide-section-renderer></ytmusic-guide-section-renderer>
+          <script>
+            document.addEventListener('guide-section-click', (e) => {
+              console.log(e.detail);
+            });
+          </script>
+          <suggestion-carousel>
+            <button class="item">item1</button>
+            
+          </suggestion-carousel>
+          <div class="Sugerencias" id="Sugerencias"></div>
+          <youtube-grid id="results-grid" dark-mode></youtube-grid>
+          <div id="results-container" class="results-container">
+
       </div>
-  </div>
+
+      </div>
+    </div>  
+    <div slot="2-content">
+      <p>Here are your Projects.</p>
+
+    </div>
+    <div slot="3-content">
+      <p>You have new Messages!</p>
+
+    </div>
+    <div slot="4-content">
+      <p>Adjust your Settings here.</p>
+
+    </div>
+    <div slot="5-content" class="flex justify-center w-full">
+
+    </div>
+  </main-content>
+  <mini-player> 
+    <div slot="main">
+      <sync-media-player id="mediaPlayer" autoplay="true"></sync-media-player>  
+    </div>
+    <div slot="details">
+      <p>Detalles adicionales sobre el contenido.</p>
+    </div>
+  </mini-player>
 </div>
-<mini-player>
-  <div slot="main">
-    <!-- Insertar el componente SyncMediaPlayer dentro de MiniPlayer -->
-    <sync-media-player id="mediaPlayer" autoplay="true"></sync-media-player>  
-  </div>
-  <div slot="details">
-    <p>Detalles adicionales sobre el contenido.</p>
-  </div>
-</mini-player>
         <script src="main.js" type="module"></script>
 </body>
 </html>
