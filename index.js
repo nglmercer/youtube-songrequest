@@ -152,7 +152,7 @@ app.post('/api', (req, res) => {
   console.log('Evento recibido:', event);
   console.log('Datos recibidos:', payload);
   wss.clients.forEach(client => {
-    client.send(JSON.stringify({ action, success: true, data: payload }));
+    client.send(JSON.stringify({ action: event, success: true, data: payload }));
   });
 });
 server.listen(PORT, () => {

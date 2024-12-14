@@ -1,12 +1,7 @@
-import { ResultItem, getMediaServer, getDivItem } from './components/ResulItems.js';
-import { Queue, Controlmedia } from './components/Queueaudio.js';
-import AudioPlayer from './components/AudioPlayer.js';
-/* import MediaQueue, { ScrollableContainer } from './components/MediaQueue.js';
- */
+// frontend no usan modulos si existen modules estan mal solo importamos los modulos que hemos creado
 import UserData, { DivManager } from './components/Userdata.js';
 //import socketManager from './components/socket.js';
 const ws = new WebSocket('ws://localhost:3000');
-
 // Evento de conexión establecida
 ws.onopen = () => {
   console.log('WebSocket connected');
@@ -20,11 +15,25 @@ const actionsevents = {
     action: 'getplaylistinfo',
     callback: (data) => handlePlaylistInfo(data),
   },
+  api: {
+    action: 'api',
+    callback: (data) => handleApi(data),
+  },
 };
+function handleApi(data) {
+  console.log("handleApi", data);
+  if (data && data.action === 'searchSong') {
+    searchYTMusic(data.query);
+  }
+}
 // Evento de mensaje recibido
 ws.onmessage = (event) => {
   const message = JSON.parse(event.data);
   if (!message.action) {
+    console.log("message", message);
+    return;
+  }
+  if (!message.data || !message.data) {
     console.log("message", message);
     return;
   }
@@ -50,6 +59,8 @@ const carousel = document.querySelector('suggestion-carousel');
 const searchInput = document.querySelector('search-input');
 const userData = new UserData("userData");
 const allsugestions = userData.getLastItems('text', 10);
+const gridcontainer = document.getElementById('results-grid');
+const gridlist = document.getElementById('gridlist');
 //console.log("userData",userData.getLastItems('text', 10))
 
 allsugestions.forEach(item => carousel.createButton(`${item}`, 'buttonClicked', { message: item }));
@@ -61,23 +72,6 @@ carousel.addEventListener('buttonClicked', (e) => {
   }
 });
 const mediaPlayer = document.getElementById('mediaPlayer');
-//userData.getLastItems('text', 10)
-//const mediaQueue = new MediaQueue();
-let playlistconfig = {
-  visibleRange: 10,
-  itemClass: 'scrollable-item',
-}
-/* const playlistItems =  new ScrollableContainer("playlist",playlistconfig);
-const videoPlayer123 = document.getElementById('videoPlayer2');
-const audioPlayer123 = document.getElementById('audioPlayer'); */
-/* document.querySelector(".search-container").addEventListener("submit", async function (event) {
-  event.preventDefault();
-  const query = searchinput.value;
-  const searchData = await searchYTMusic(query);
-  console.log(searchData);
-  // handleResults(searchData);
-}); */
-//socketManager.on('search', (data) => handleResults(data));
 
 searchInput.addEventListener('search-submitted', (e) => {
   const query = e.detail.query;
@@ -95,8 +89,7 @@ async function searchYTMusic(query) {
 
   ws.send(JSON.stringify(message));
 }
-const gridcontainer = document.getElementById('results-grid');
-const gridlist = document.getElementById('gridlist');
+
 function handleResults(results) {
   const items = results.map(data => {
       console.log("results data", data);
@@ -186,7 +179,6 @@ function mapResultOptions(data) {
       return {};
   }
 }
-//socketManager.on('getPlaylist', (data) => handlePlaylistInfo(data));
 async function fetchPlaylistInfo(playlistId, data) {
 /*   try {
     const url = new URL(window.location + 'ytmusic');
@@ -262,7 +254,6 @@ if (localStorage.getItem('lastPlaylistInfo')) {
   const lastResultItems = JSON.parse(localStorage.getItem('lastPlaylistInfo'));
   handlePlaylistInfo(lastResultItems);
 }
-// Ejemplo de uso
 async function getAndPlay(data, resultsoptions) {
   try {
     console.log("getAndPlay", data);
@@ -323,3 +314,31 @@ async function downloadByVideoId(videoId) {
       return null;
   }
 }
+document.getElementById('btntest').addEventListener('click', async () => {
+  //sendWebhookData("http://localhost:3000/api", "api", { action: "searchSong", query: "test" });
+  // params 1 api_url 2 api_event 3 api_data { action, query }
+  // data_action = text, data_query = text
+});
+
+const sendWebhookData = async (url,action, data) => {
+  const payload = { event: action, payload: data };
+
+  try {
+      const response = await fetch(url || '', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+          throw new Error(`Error en la respuesta: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('Resultado:', result);
+  } catch (error) {
+      console.error('Error:', error);
+  }
+};
