@@ -96,6 +96,7 @@ async function searchYTMusic(query) {
   ws.send(JSON.stringify(message));
 }
 const gridcontainer = document.getElementById('results-grid');
+const gridlist = document.getElementById('gridlist');
 function handleResults(results) {
   const items = results.map(data => {
       console.log("results data", data);
@@ -126,6 +127,7 @@ function handleResults(results) {
   // Crear un nuevo bloque de items en la parte superior
   //resultList.addBlock(items, false); // Inserta el bloque en la parte superior
   gridcontainer.addVideoItems(items);
+  gridlist.addVideoItems(items);
 }
 gridcontainer.addEventListener('video-click', (event) => {
   const data = event.detail;
@@ -254,6 +256,7 @@ function handlePlaylistInfo(playlistInfo) {
 
   // Crear un nuevo bloque de items en la parte superior
   gridcontainer.addVideoItems(items);
+  gridlist.addVideoItems(items);
 }
 if (localStorage.getItem('lastPlaylistInfo')) {
   const lastResultItems = JSON.parse(localStorage.getItem('lastPlaylistInfo'));

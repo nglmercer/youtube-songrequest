@@ -16,6 +16,9 @@ const svgs = {
   login: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
     </svg>`,
+  profile: `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true" style="pointer-events: none; display: inherit; width: 100%; height: 100%;">
+  <path clip-rule="evenodd" d="M12 20.5c1.894 0 3.643-.62 5.055-1.666a5.5 5.5 0 00-10.064-.105.755.755 0 01-.054.099A8.462 8.462 0 0012 20.5Zm4.079-5.189a7 7 0 012.142 2.48 8.5 8.5 0 10-12.443 0 7 7 0 0110.3-2.48ZM12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Zm2-12.5a2 2 0 11-4 0 2 2 0 014 0Zm1.5 0a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0Z" fill-rule="evenodd">
+  </path></svg>`,
   house: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
 </svg>`,
@@ -40,7 +43,16 @@ clipboard: `<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="current
  </path></svg>`,
   suscription: `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true" style="pointer-events: none; display: inherit; ">
   <path clip-rule="evenodd" d="M4 4.5A1.5 1.5 0 015.5 3h13A1.5 1.5 0 0120 4.5H4Zm16.5 3h-17v11h17v-11ZM3.5 6A1.5 1.5 0 002 7.5v11A1.5 1.5 0 003.5 20h17a1.5 1.5 0 001.5-1.5v-11A1.5 1.5 0 0020.5 6h-17Zm7.257 4.454a.5.5 0 00-.757.43v4.233a.5.5 0 00.757.429L15 13l-4.243-2.546Z" fill-rule="evenodd">
-  </path></svg>`
+  </path></svg>`,
+  search: `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" height="24" viewBox="0 0 24 24" width="24" focusable="false" aria-hidden="true" style="pointer-events: none; display: inherit; width: 100%; height: 100%;">
+  <path clip-rule="evenodd" d="M16.296 16.996a8 8 0 11.707-.708l3.909 3.91-.707.707-3.909-3.909zM18 11a7 7 0 00-14 0 7 7 0 1014 0z" fill-rule="evenodd">
+  </path></svg>
+  `,
+  searchSvg: `
+  <svg viewBox="0 0 24 24">
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+  </svg>
+`
 }
 
 const STYLES = `
@@ -63,8 +75,12 @@ const STYLES = `
   .items-center { align-items: center; }
   .h-5 { height: 1.25rem; }
   .h-6 { height: 1.5rem; }
+  .h-12 { height: 3rem; }
+  .h-14 { height: 3.5rem; }
   .h-16 { height: 4rem; }
   .w-5 { width: 1.25rem; }
+  .w-32 { width: 8rem; }
+  .w-48 { width: 12rem; }
   .w-64 { width: 16rem; }
   .w-full { width: 100%; }
   .h-full { height: 100%; }
@@ -77,6 +93,7 @@ const STYLES = `
   .mb-4 { margin-bottom: 1rem; }
   .ml-6 { margin-left: 1.5rem; }
   .rounded { border-radius: 0.25rem; }
+  .rounded-lg { border-radius: 0.5rem; }
   .fixed { position: fixed; }
   .top-16 { top: 4rem; }
   .left-0 { left: 0; }
@@ -147,7 +164,7 @@ const STYLES = `
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem;
+  padding: 0.5rem;
   background: transparent;
   border: none;
   border-radius: 0.25rem;
@@ -197,7 +214,7 @@ const STYLES = `
 
 .nav-button.active {
   color: white;
-  background-color: rgba(55, 65, 81, 0.8);
+  background-color: rgba(55, 65, 81, 0.4);
 }
 
 .nav-button.active::after {
@@ -223,7 +240,7 @@ const STYLES = `
 
 .nav-link.active {
   color: white;
-  background-color: rgba(55, 65, 81, 0.8);
+  background-color: rgba(55, 65, 81, 0.4);
 }
 
 .nav-link.active::before {
@@ -284,7 +301,7 @@ class AppConfig {
   static getSidebarContent(page, index, activePage) {
     const pageConfig = this.PAGE_CONFIG[page];
     return `
-      <a href="#" class="nav-link flex items-center px-6 py-2 hover:bg-gray-700 ${activePage === page ? 'active' : ''}" 
+      <a href="#" class="rounded nav-link flex items-center px-6 py-2 hover:bg-gray-700 ${activePage === page ? 'active' : ''}" 
          data-page="${page}">
         ${pageConfig.icon}
         ${pageConfig.label}
@@ -361,14 +378,14 @@ class SideBar extends HTMLElement {
   render() {
     const activePage = AppConfig.getActivePage();
     
-    // Inline styles for sidebar
-    const sidebarStyles = `
+    //this element is neighbors content-shifted
+    const sidebarStyles = /*css*/`
       .sidebar {
         position: fixed;
         top: 4rem;
         left: 0;
         height: calc(100% - 4rem);
-        width: 16rem;
+        width: 13.5rem; 
         background-color: #131313;
         color: white;
         transition: transform 0.3s ease-in-out;
@@ -377,6 +394,10 @@ class SideBar extends HTMLElement {
       }
       .sidebar.sidebar-open {
         transform: translateX(0);
+      }
+      .sidebar-content {
+        width: 100%;
+        height: 100%;
       }
     `;
 
@@ -391,7 +412,7 @@ class SideBar extends HTMLElement {
             AppConfig.getSidebarContent(page, index, activePage)
           ).join('')}
         </nav>
-        <slot name="sidebar-content"></slot>
+        <slot name="sidebar-content" ></slot>
       </div>
     `;
   }
@@ -448,7 +469,7 @@ class NavBar extends HTMLElement {
           </style>
           <nav class="bg-gray-950 fixed w-full z-50">
             <div class="mx-auto px-4">
-              <div class="flex items-center h-16">
+              <div class="flex items-center h-14">
                 <div class="flex items-center">
                   <button id="menuButton" class="text-gray-300 hover:text-white transparent border-0">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -520,15 +541,15 @@ class MainContent extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         main {
-          padding-top: 4rem;
+          padding-top: 3.5rem;
           min-height: 100vh;
-          background-color: rgb(24, 24, 27);
+          background-color: #131313;
           color: white;
           transition: padding-left 0.3s ease-in-out;
           padding-left: 0;
         }
         .container {
-          padding: 0.5rem; /* p-6 */
+          padding-inline: 0.5rem; /* p-6 */
         }
         .title {
           font-size: 1.875rem; /* text-3xl */
@@ -536,7 +557,12 @@ class MainContent extends HTMLElement {
           margin-bottom: 1rem; /* mb-4 */
         }
         .content-shifted {
-          padding-left: 16rem;
+          padding-left: 10.5rem;
+        }
+        @media (max-width: 768px) {
+          .content-shifted {
+            padding-left: 0;
+          }
         }
       </style>
       <main>
@@ -575,20 +601,20 @@ const icons = {
 };
 const listitems = [
   {
-    title: 'Home',
-    icon: icons.home
+    title: 'Inicio',
+    icon: svgs.home
   },
   {
-    title: 'Playlists',
-    icon: icons.playlist
+    title: 'Shorts',
+    icon: svgs.shorts
   },
   {
-    title: 'Albums',
-    icon: icons.album
+    title: 'Suscripciones',
+    icon: svgs.suscription
   },
   {
-    title: 'Liked',
-    icon: icons.liked
+    title: 'Tu',
+    icon: svgs.profile
   }
 ];
 class YTMusicGuideSectionRenderer extends HTMLElement {
@@ -616,9 +642,10 @@ class YTMusicGuideSectionRenderer extends HTMLElement {
   :host {
     display: flex;
     flex-direction: column;
-    width: 4rem;
+    width: 4.5rem;
     height: 100vh;
     position: fixed;
+    padding-block: 0.5rem;
     left: 0;
     color: #fff;
     font-family: Roboto, Arial, sans-serif;
@@ -626,7 +653,7 @@ class YTMusicGuideSectionRenderer extends HTMLElement {
   }
 
   .guide-section {
-    padding: 12px 0;
+    padding: 0;
   }
 
   .guide-section-header {
@@ -643,11 +670,11 @@ class YTMusicGuideSectionRenderer extends HTMLElement {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 72px;
-    height: 72px;
+    width: 4.5rem;
+    height: 4.5rem;
     cursor: pointer;
     transition: background-color 0.2s;
-    margin: 0 8px;
+    margin: 0 4px;
   }
 
   .guide-section-item:hover {
@@ -658,27 +685,28 @@ class YTMusicGuideSectionRenderer extends HTMLElement {
   .guide-section-items {
     display: flex;
     flex-wrap: wrap;
+    gap: 1px;
   }
 
   .icon-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    margin-bottom: 6px;
+    width: 1.5rem;
+    height: 2rem;
+    margin-bottom: 0.2rem;
     color: #fff;
   }
 
   .guide-section-item span {
-    font-size: 12px;
+    font-size: 0.65rem;
+    font-weight: 400;
     text-align: center;
-    color: #aaa;
+    color: #f1f1f1;
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding: 0 4px;
   }
 
   @media (max-width: 768px) {
@@ -689,7 +717,6 @@ class YTMusicGuideSectionRenderer extends HTMLElement {
       </style>
 
       <div class="guide-section">
-        <div class="guide-section-header">Library</div>
         <div class="guide-section-items">
           ${listitems.map(item => this.createMenuItem(item.icon, item.title)).join('')}
         </div>
@@ -1229,11 +1256,6 @@ class NestedMenu extends HTMLElement {
 }
 
 customElements.define('nested-menu', NestedMenu);
-const searchSvg = `
-  <svg viewBox="0 0 24 24">
-    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-  </svg>
-`;
 
 class SearchInput extends HTMLElement {
   constructor() {
@@ -1307,9 +1329,10 @@ class SearchInput extends HTMLElement {
         }
         .search-icon-left { 
           position: absolute;
-          left: 10px;
+          padding-top: 0.5rem;
+          left: 0px;
           color: #bbb;
-          opacity: 0;
+          opacity: 1;
           transition: opacity 0.3s;
         }
 
@@ -1342,14 +1365,14 @@ class SearchInput extends HTMLElement {
 
       <div class="search-container">
         <button class="toggle-icon">
-          ${searchSvg}
+          ${svgs.searchSvg}
         </button>
                 <div class="search-icon-left">
-          ${searchSvg}
+          ${svgs.searchSvg}
         </div>
         <input type="text" placeholder="Buscar...">
         <button class="search-icon">
-          ${searchSvg}
+          ${svgs.search}
         </button>
 
       </div>
@@ -1426,12 +1449,16 @@ class SuggestionCarousel extends HTMLElement {
     display: flex;
     overflow-x: scroll;
     scroll-behavior: smooth;
-    margin-inline: 2rem;
+    margin-inline: 1.2rem;
     gap: 1rem;
     width: 100%;
     padding: 5px 0;
     position: relative;
     scrollbar-width: none; /* Ocultar barra de desplazamiento en Firefox */
+    transition:
+  all 200ms,
+  opacity 400ms;
+
   }
 
   .carousel::-webkit-scrollbar {
@@ -1445,10 +1472,10 @@ class SuggestionCarousel extends HTMLElement {
     background: rgba(255,255,255,0.1);
     color: #fff;
 
-    max-height: 2rem;
+    max-height: 2.5rem;
     box-sizing: border-box;
     padding-inline: 0.5rem;
-    border-radius: 0.5rem;
+    border-radius: 0.6rem;
 
     white-space: nowrap;
     cursor: pointer;
@@ -1471,16 +1498,16 @@ class SuggestionCarousel extends HTMLElement {
 }
 
 .gradient-overlay.left {
-  margin-left: 2rem;
+  margin-left: 1rem;
   left: 0;
-  background: linear-gradient(to right, #18181b, transparent);
+  background: linear-gradient(to right, #131313, transparent);
   display: none;
 }
 
 .gradient-overlay.right {
-  margin-right: 2rem;
+  margin-right: 1rem;
   right: 0;
-  background: linear-gradient(to left, #18181b, transparent);
+  background: linear-gradient(to left, #131313, transparent);
   display: none;
 }
 
@@ -1650,17 +1677,43 @@ class YouTubeGrid extends HTMLElement {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
           gap: 1rem;
-          padding: 1rem;
+          padding-block: 0.5rem;
+          padding-inline: 1.5rem;
+          border-radius: 8px;
           background-color: var(--bg-color, #fff);
           color: var(--text-color, #000);
+          overflow: hidden;
         }
+
         :host([dark-mode]) {
-          --bg-color: #181818;
+          --bg-color: #131313;
           --text-color: #fff;
         }
 
+        :host([scroll]) {
+          overflow-y: auto;
+          max-height: 40dvh;
+        }
+
+        :host([grid-template]) {
+          grid-template-columns: var(--grid-template);
+        }
+
+        :host([list-mode]) {
+                          gap: 1rem;
+
+          display: block;
+          font-size: 0.8rem;
+          .subtitles {
+            font-size: 0.65rem;
+          }
+            .subtitles {
+            -webkit-line-clamp: 2; 
+            text-overflow: ellipsis;
+          }
+        }
+
         .video-item {
-          background: var(--item-bg, #f9f9f9);
           border-radius: 8px;
           overflow: hidden;
           cursor: pointer;
@@ -1668,9 +1721,17 @@ class YouTubeGrid extends HTMLElement {
           display: flex;
           flex-direction: column;
         }
-
+        .video-item:hover {
+            background: var(--item-bg, #f9f9f9);
+        }
         :host([dark-mode]) .video-item {
           --item-bg: #282828;
+        }
+
+        :host([list-mode]) .video-item {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
         }
 
         .image-container {
@@ -1680,6 +1741,10 @@ class YouTubeGrid extends HTMLElement {
           flex-shrink: 0;
         }
 
+        :host([list-mode]) .image-container {
+          width: 150px;
+        }
+
         .image-container img {
           width: 100%;
           height: 100%;
@@ -1687,7 +1752,11 @@ class YouTubeGrid extends HTMLElement {
         }
 
         .details {
-          padding: 0.75rem;
+          padding: 0.5rem;
+        }
+
+        :host([list-mode]) .details {
+          flex: 1;
         }
 
         .title,
@@ -1718,8 +1787,26 @@ class YouTubeGrid extends HTMLElement {
     `;
   }
 
+  static get observedAttributes() {
+    return ["grid-template", "scroll", "dark-mode", "maxwidth", "list-mode", "width"];
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (name === "grid-template") {
+      this.style.setProperty("--grid-template", newValue || "repeat(auto-fill, minmax(250px, 1fr))");
+    }
+    if (name === "scroll") {
+      this.style.overflowY = newValue !== null ? "auto" : "hidden";
+    }
+    if (name === "maxwidth") {
+      this.style.setProperty("max-width", newValue || "100%");
+    }
+    if (name === "width") {
+      this.style.setProperty("width", newValue || "100%");
+    }
+  }
+
   addVideoItem(data, prepend = false) {
-    //console.log("Adding video item:", data);
     const item = document.createElement("div");
     item.classList.add("video-item");
 
@@ -1747,6 +1834,7 @@ class YouTubeGrid extends HTMLElement {
       this.shadowRoot.appendChild(item);
     }
   }
+
   limitTextLines(element, maxLines) {
     element.style.display = "-webkit-box";
     element.style.webkitBoxOrient = "vertical";
@@ -2111,3 +2199,193 @@ class MiniPlayer extends HTMLElement {
 }
 
 customElements.define('mini-player', MiniPlayer);
+const dsStyles = `
+  :host {
+    display: block;
+    font-family: 'Roboto', Arial, sans-serif;
+    color: var(--text-color, #0f0f0f);
+    background: var(--bg-color, #fff);
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .description-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .stats {
+    display: flex;
+    gap: 12px;
+    color: var(--secondary-text, #606060);
+    font-size: 14px;
+  }
+
+  .title {
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .content {
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  .expand-btn {
+    background: none;
+    border: none;
+    color: var(--secondary-text, #606060);
+    font-size: 14px;
+    font-weight: 500;
+    padding: 0;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .expanded .content {
+    display: block;
+  }
+
+  .collapsed .content {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :host {
+      --text-color: #fff;
+      --bg-color: #0f0f0f;
+      --secondary-text: #aaa;
+    }
+  }
+`;
+function createTemplate(props) {
+    return `
+      <div class="description-container collapsed">
+        <div class="stats">
+          <span class="views">${props.views || '0'} views</span>
+          <span class="date">${props.date || 'No date'}</span>
+          <span class="likes">${props.likes || '0'} likes</span>
+        </div>
+        <h2 class="title">${props.title || ''}</h2>
+        <div class="content">${props.content || ''}</div>
+        <button class="expand-btn">Show more</button>
+      </div>
+    `;
+  }
+class Description extends HTMLElement {
+  #container;
+  #expandBtn;
+  #initialized = false;
+  
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+  }
+
+  static get observedAttributes() {
+    return ['title', 'content', 'views', 'date', 'likes'];
+  }
+
+  get title() {
+    return this.getAttribute('title');
+  }
+
+  set title(value) {
+    this.setAttribute('title', value);
+  }
+
+  get content() {
+    return this.getAttribute('content');
+  }
+
+  set content(value) {
+    this.setAttribute('content', value);
+  }
+
+  connectedCallback() {
+    if (!this.#initialized) {
+      this.render();
+      this.#setupEventListeners();
+      this.#initialized = true;
+    }
+  }
+
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue === newValue) return;
+    
+    if (this.#initialized) {
+      switch (name) {
+        case 'title':
+          this.#updateTitle(newValue);
+          break;
+        case 'content':
+          this.#updateContent(newValue);
+          break;
+        case 'views':
+          this.#updateElement('.views', `${newValue} views`);
+          break;
+        case 'date':
+          this.#updateElement('.date', newValue);
+          break;
+        case 'likes':
+          this.#updateElement('.likes', `${newValue} likes`);
+          break;
+      }
+    }
+  }
+
+  #updateElement(selector, value) {
+    const element = this.shadowRoot?.querySelector(selector);
+    if (element) {
+      element.textContent = value;
+    }
+  }
+
+  #updateTitle(value) {
+    this.#updateElement('.title', value);
+  }
+
+  #updateContent(value) {
+    this.#updateElement('.content', value);
+  }
+
+  #setupEventListeners() {
+    this.#container = this.shadowRoot.querySelector('.description-container');
+    this.#expandBtn = this.shadowRoot.querySelector('.expand-btn');
+
+    this.#expandBtn.addEventListener('click', () => {
+      if (this.#container.classList.contains('collapsed')) {
+        this.#container.classList.remove('collapsed');
+        this.#container.classList.add('expanded');
+        this.#expandBtn.textContent = 'Show less';
+      } else {
+        this.#container.classList.remove('expanded');
+        this.#container.classList.add('collapsed');
+        this.#expandBtn.textContent = 'Show more';
+      }
+    });
+  }
+
+  render() {
+    const props = {
+      title: this.getAttribute('title'),
+      content: this.getAttribute('content'),
+      views: this.getAttribute('views'),
+      date: this.getAttribute('date'),
+      likes: this.getAttribute('likes')
+    };
+
+    this.shadowRoot.innerHTML = `
+      <style>${dsStyles}</style>
+      ${createTemplate(props)}
+    `;
+  }
+}
+
+customElements.define('youtube-description', Description);

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscador con Resultados</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="main.css">
     <script src="./components/socket.io.min.js"></script>
     <script src="./components/webcomponents.js"></script>
@@ -11,21 +12,22 @@
 <body>
 
   <side-bar>
-    <div slot="sidebar-content">
-<!--         <login-button platform="tiktok"></login-button>
+    <div slot="sidebar-content" class="w-full ">
+        <login-button platform="tiktok"></login-button>
       <login-button platform="twitch"></login-button>
-      <login-button platform="kick"></login-button> -->
+      <login-button platform="kick"></login-button>
       
     </div>
   </side-bar>
   
   <nav-bar>
     <div slot="navbar-content" class="flex justify-between w-full">
+      <div class="flex align-items-center">
         <search-input theme="dark"></search-input>
-
+      </div>
 
         <custom-dropdown mode="dark">
-          <button slot="trigger" class="btn btn-primary absolute top-0">a</button>
+          <button slot="trigger"><img src="./favicon.svg" alt="" srcset=""></button>
           <login-button platform="tiktok"></login-button>
           <login-button platform="twitch"></login-button>
           <login-button platform="kick"></login-button>
@@ -37,7 +39,7 @@
 
   <main-content>
     
-    <div slot="1-content" style="        margin-left: calc(5% - 20px);">
+    <div slot="1-content" class="margin-yt-guide">
         <div>          
           <ytmusic-guide-section-renderer></ytmusic-guide-section-renderer>
           <script>
@@ -46,7 +48,7 @@
             });
           </script>
           <suggestion-carousel>
-            <button class="item">item1</button>
+            <button class="item" style=" font-weight: 600;">Todo</button>
             
           </suggestion-carousel>
           <div class="Sugerencias" id="Sugerencias"></div>
@@ -78,7 +80,23 @@
       <sync-media-player id="mediaPlayer" autoplay="true"></sync-media-player>  
     </div>
     <div slot="details">
-      <p>Detalles adicionales sobre el contenido.</p>
+      <div class="grid-col2-1-2  gap-4 w-full">
+        <div>
+          <youtube-description>
+
+          </youtube-description>
+          <script>
+            const description = document.querySelector('youtube-description');
+            setTimeout(() => {
+  description.title = "Updated Title!";
+  description.content = "123123123In this tutorial, we'll learn how to create custom web components using vanilla JavaScript. Web Components are a set of web platform APIs that allow you to create new custom, reusable, encapsulated HTML tags to use in web pages and web apps.In this tutorial, we'll learn how to create custom web components using vanilla JavaScript. Web Components are a set of web platform APIs that allow you to create new custom, reusable, encapsulated HTML tags to use in web pages and web apps.In this tutorial, we'll learn how to create custom web components using vanilla JavaScript. Web Components are a set of web platform APIs that allow you to create new custom, reusable, encapsulated HTML tags to use in web pages and web apps.In this tutorial, we'll learn how to create custom web components using vanilla JavaScript. Web Components are a set of web platform APIs that allow you to create new custom, reusable, encapsulated HTML tags to use in web pages and web apps.This content was updated using JavaScript!";
+}, 3000);
+          </script>
+        </div>
+        <div>
+          <youtube-grid id="gridlist" list-mode dark-mode grid-template="auto" scroll></youtube-grid>
+        </div>
+      </div>
     </div>
   </mini-player>
 </div>

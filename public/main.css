@@ -308,7 +308,6 @@ video {
   display: grid !important;
   padding: 5px;
   gap: 5px;
-  background-color: #008000;
 }
 .flex {
   display: flex !important;
@@ -537,6 +536,10 @@ video {
     max-width: 150px;
   }
 }
+.grid-col2-1-2 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+}
 @media (max-height: 1600px) {
   .player {
     /* bottom: 10% !important; */
@@ -578,4 +581,31 @@ video {
   border: none;
   padding: 5px 10px;
   cursor: pointer;
+}
+.align-items-center {
+  align-items: center;
+}
+.w-full {
+  width: 100%;
+}
+.h-full {
+  height: 100%;
+}
+.gap-4 {
+  gap: 1rem;
+}
+.justify-between {
+  justify-content: space-between;
+}
+.margin-yt-guide {
+  margin-left: 4rem;
+}
+@media (max-width: 768px) {
+  .margin-yt-guide {
+    margin-left: 0;
+  }
+  .grid-col2-1-2 {
+    display: grid;
+    grid-template-columns: auto ;
+  }
 }
