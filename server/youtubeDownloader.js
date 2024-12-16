@@ -20,7 +20,12 @@ class YTMusicManager {
   }
 
   async getplaylistinfo(playlistId) {
+    if (!playlistId) return;
     try {
+/*       if (!this.ytmusic.validatePlaylistURL(playlistId)) {
+        throw new Error('Invalid playlistId');
+      }
+      console.log("playlistId", playlistId); */
       const playlist = await this.ytmusic.getPlaylist(playlistId);
       return playlist;
     } catch (err) {
@@ -88,11 +93,13 @@ class YTStreamDownloader {
   }
 
   async getplaylistinfo(playlistId) {
+    if (!playlistId) return;
     const link = `https://www.youtube.com/playlist?list=${playlistId}`;
     try {
       if (!ytstream.validatePlaylistURL(link)) {
-        throw new Error('Invalid playlistId');
+        throw new Error('Invalid playlistId', playlistId, link);
       }
+      console.log("playlistId", playlistId);
       const results = await ytstream.getPlaylist(link);
       return results;
     } catch (err) {

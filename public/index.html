@@ -77,7 +77,16 @@
   </main-content>
   <mini-player> 
     <div slot="main">
-      <sync-media-player id="mediaPlayer" autoplay="true"></sync-media-player>  
+      <sync-media-player id="mediaPlayer" autoplay="true" volume="0.01"></sync-media-player>  
+      <script>
+        const events = ['play', 'pause', 'timeupdate', 'volumechange', 'endmedia'];
+        const webplayer = document.querySelector('sync-media-player');
+        events.forEach(event => {
+          webplayer.addEventListener(event, (e) => {
+            console.log(event, e);
+          });
+        });
+      </script>
     </div>
     <div slot="details">
       <div class="grid-col2-1-2  gap-4 w-full">
@@ -94,7 +103,7 @@
           </script>
         </div>
         <div>
-          <youtube-grid id="gridlist" list-mode dark-mode grid-template="auto" scroll></youtube-grid>
+          <youtube-grid id="gridlist" list-mode dark-mode grid-template="auto"></youtube-grid>
         </div>
       </div>
     </div>

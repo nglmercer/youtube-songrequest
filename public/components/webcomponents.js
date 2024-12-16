@@ -1907,7 +1907,7 @@ class SyncMediaPlayer extends HTMLElement {
     this.videoElement = document.createElement('video');
     this.videoElement.controls = false;
     this.audioElement.controls = true;
-
+    this.isSyncing = false;
     // Estilo básico
     const style = document.createElement('style');
     style.textContent = `
@@ -1931,7 +1931,7 @@ class SyncMediaPlayer extends HTMLElement {
   }
 
   static get observedAttributes() {
-    return ['audio-src', 'video-src', 'autoplay'];
+    return ['audio-src', 'video-src', 'autoplay', 'muted', 'volume'];
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -1950,28 +1950,35 @@ class SyncMediaPlayer extends HTMLElement {
         this.audioElement.play();
       }
     }
+    if (name === 'muted') {
+      this.audioElement.muted = newValue !== null;
+      this.videoElement.muted = newValue !== null;
+    }
+    if (name === 'volume') {
+      this.audioElement.volume = newValue;
+      this.videoElement.volume = newValue;
+    }
   }
 
   syncEvents() {
-    let isSyncing = false;
-
     const sync = (source, target) => {
       source.addEventListener('play', () => {
-        if (!isSyncing) target.play();
+        if (!this.isSyncing) target.play();
+        this.emitCustomEvent('play', { source, target });
       });
       source.addEventListener('pause', () => {
-        if (!isSyncing) target.pause();
+        if (!this.isSyncing) target.pause();
+        this.emitCustomEvent('pause', { source, target });
       });
-      source.addEventListener('seeked', () => {
-        if (!isSyncing) {
-          isSyncing = true;
-          target.currentTime = source.currentTime;
-          target.addEventListener('seeked', () => (isSyncing = false), { once: true });
-        }
-      });
+      source.addEventListener('seeked', () => this.syncCurrentTime(source, target));
       source.addEventListener('ratechange', () => {
-        if (!isSyncing) target.playbackRate = source.playbackRate;
+        if (!this.isSyncing) target.playbackRate = source.playbackRate;
       });
+      source.addEventListener('volumechange', () => {
+        if (!this.isSyncing) target.volume = source.volume;
+        this.emitCustomEvent('volumechange', { source });
+      });
+
     };
 
     sync(this.videoElement, this.audioElement);
@@ -1984,7 +1991,6 @@ class SyncMediaPlayer extends HTMLElement {
 
     const checkEnd = () => {
       if (videoEnded && audioEnded) {
-        this.dispatchEvent(new CustomEvent('endmedia'));
         videoEnded = false;
         audioEnded = false;
       }
@@ -1992,15 +1998,60 @@ class SyncMediaPlayer extends HTMLElement {
 
     this.videoElement.addEventListener('ended', () => {
       videoEnded = true;
+      this.emitCustomEvent('endmedia', { type: 'video', videoEnded });
       checkEnd();
     });
 
     this.audioElement.addEventListener('ended', () => {
       audioEnded = true;
+      this.emitCustomEvent('endmedia', { type: 'audio', audioEnded });
       checkEnd();
     });
   }
+  emitCustomEvent(name, data) {
+    this.dispatchEvent(new CustomEvent(name, { detail: data }));
+  }
+  syncCurrentTime(source, target, throttled = false) {
+    if (this.isSyncing) return;
 
+    const difference = Math.abs(source.currentTime - target.currentTime);
+
+    // Sincronizar solo si la diferencia es significativa o no está limitada por "timeupdate"
+    if (!throttled || difference > 0.3) {
+      this.isSyncing = true;
+      target.currentTime = source.currentTime;
+
+      // Asegurarse de que el estado vuelva a la normalidad
+      setTimeout(() => {
+        this.isSyncing = false;
+      }, 50);
+    }
+  }
+
+  setupEndEvent() {
+    let videoEnded = false;
+    let audioEnded = false;
+
+    const checkEnd = () => {
+      if (videoEnded && audioEnded) {
+        this.emitCustomEvent('endmedia', { type: 'both' });
+        videoEnded = false;
+        audioEnded = false;
+      }
+    };
+
+    this.videoElement.addEventListener('ended', () => {
+      videoEnded = true;
+      this.emitCustomEvent('endmedia', { type: 'video' });
+      checkEnd();
+    });
+
+    this.audioElement.addEventListener('ended', () => {
+      audioEnded = true;
+      this.emitCustomEvent('endmedia', { type: 'audio' });
+      checkEnd();
+    });
+  }
   connectedCallback() {
     if (this.hasAttribute('audio-src')) {
       this.audioElement.src = this.getAttribute('audio-src');
@@ -2092,10 +2143,13 @@ class MiniPlayer extends HTMLElement {
           }
 
           :host(.fullscreen) {
-            width: 90vw;
-            height: 90vh;
-            bottom: 5vh;
-            right: 5vw;
+            width: 95dvw;
+            height: 95dvh;
+            top: 3rem;
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            overflow: auto;
           }
 
           .content {

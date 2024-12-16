@@ -1,5 +1,5 @@
 // frontend no usan modulos si existen modules estan mal solo importamos los modulos que hemos creado
-import UserData, { DivManager } from './components/Userdata.js';
+import UserData from './components/Userdata.js';
 //import socketManager from './components/socket.js';
 const ws = new WebSocket('ws://localhost:3000');
 // Evento de conexión establecida
@@ -119,8 +119,8 @@ function handleResults(results) {
   console.log("items", items);
   // Crear un nuevo bloque de items en la parte superior
   //resultList.addBlock(items, false); // Inserta el bloque en la parte superior
-  gridcontainer.addVideoItems(items);
-  gridlist.addVideoItems(items);
+  gridcontainer.addReversedVideoItems(items, true);
+  gridlist.addReversedVideoItems(items, true);
 }
 gridcontainer.addEventListener('video-click', (event) => {
   const data = event.detail;
@@ -247,8 +247,10 @@ function handlePlaylistInfo(playlistInfo) {
   });
 
   // Crear un nuevo bloque de items en la parte superior
-  gridcontainer.addVideoItems(items);
-  gridlist.addVideoItems(items);
+/*   gridcontainer.addVideoItems(items);
+  gridlist.addVideoItems(items); */
+  gridcontainer.addReversedVideoItems(items, true);
+  gridlist.addReversedVideoItems(items, true);
 }
 if (localStorage.getItem('lastPlaylistInfo')) {
   const lastResultItems = JSON.parse(localStorage.getItem('lastPlaylistInfo'));
